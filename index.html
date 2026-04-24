@@ -29,6 +29,7 @@
       --green:     oklch(52% 0.12 150);
       --green-bg:  oklch(94% 0.025 150);
       --red:       oklch(50% 0.13 20);
+      --danger:    #e53e3e;
       --info-bg:   oklch(94% 0.020 220);
       --info-text: oklch(38% 0.060 220);
       --info-border: oklch(84% 0.030 220);
@@ -39,30 +40,48 @@
       --c5: oklch(65% 0.09 280);
       --radius: 14px;
       --transition: 0.3s cubic-bezier(.4,0,.2,1);
+      /* Hero card — light mode: gold accent surface, white text */
+      --hero-bg:      var(--accent);
+      --hero-border:  transparent;
+      --hero-text:    #fff;
+      --hero-muted:   rgba(255,255,255,0.68);
+      --hero-number:  #fff;
+      --hero-divider: rgba(255,255,255,0.20);
     }
 
     [data-theme="dark"] {
-      --bg:        oklch(13% 0.040 158);
-      --bg2:       oklch(10% 0.030 158);
-      --surface:   oklch(18% 0.048 158);
-      --surface2:  oklch(22% 0.050 158);
-      --border:    oklch(28% 0.045 158);
-      --text:      oklch(96% 0.012 82);
-      --muted:     oklch(78% 0.018 80);
-      --accent:    oklch(75% 0.110 70);
-      --accent2:   oklch(83% 0.085 70);
-      --accent-bg: oklch(22% 0.060 100);
-      --green:     oklch(74% 0.14 150);
-      --green-bg:  oklch(20% 0.040 150);
-      --red:       oklch(72% 0.12 20);
+      /* Deep hunter green — rich, earthy, luxurious */
+      --bg:        oklch(14% 0.048 145);
+      --bg2:       oklch(11% 0.038 145);
+      --surface:   oklch(21% 0.058 145);
+      --surface2:  oklch(26% 0.062 145);
+      --border:    oklch(35% 0.058 145);
+      --text:      oklch(96% 0.012 80);
+      --muted:     oklch(72% 0.028 110);
+      /* Warm gold accent — glows against forest green */
+      --accent:    oklch(74% 0.120 72);
+      --accent2:   oklch(82% 0.090 72);
+      --accent-bg: oklch(24% 0.055 110);
+      --green:     oklch(72% 0.13 148);
+      --green-bg:  oklch(20% 0.045 148);
+      --red:       oklch(70% 0.11 22);
+      --danger:    oklch(62% 0.18 22);
       --info-bg:   oklch(20% 0.035 220);
       --info-text: oklch(76% 0.060 220);
       --info-border: oklch(34% 0.040 220);
-      --c1: oklch(72% 0.12 70);
-      --c2: oklch(68% 0.11 200);
-      --c3: oklch(75% 0.10 150);
-      --c4: oklch(82% 0.07 80);
-      --c5: oklch(72% 0.09 280);
+      /* Chart colours — warm & legible on dark green */
+      --c1: oklch(74% 0.115 72);
+      --c2: oklch(66% 0.095 195);
+      --c3: oklch(70% 0.100 148);
+      --c4: oklch(80% 0.065 85);
+      --c5: oklch(72% 0.090 280);
+      /* Hero card — dark mode: rich forest surface with gold border & cream text */
+      --hero-bg:      oklch(20% 0.072 148);
+      --hero-border:  oklch(74% 0.120 72);
+      --hero-text:    oklch(97% 0.014 78);
+      --hero-muted:   oklch(70% 0.038 108);
+      --hero-number:  oklch(84% 0.100 72);
+      --hero-divider: oklch(34% 0.058 148);
     }
 
     html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; transition: background var(--transition), color var(--transition); -webkit-font-smoothing: antialiased; }
@@ -1629,17 +1648,17 @@ function AdjustmentsCard({ inputs, setInputs }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function TakeHomeHero({ result, freq }) {
   return (
-    <div style={{background:'var(--accent)',borderRadius:16,padding:'22px 20px',animation:'fadeUp .4s ease both'}}>
-      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:'rgba(255,255,255,0.7)',marginBottom:4}}>
+    <div style={{background:'var(--hero-bg)',border:'2px solid var(--hero-border)',borderRadius:16,padding:'22px 20px',animation:'fadeUp .4s ease both'}}>
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:'var(--hero-muted)',marginBottom:4}}>
         Take-Home Pay {freq==='monthly'?'(Monthly)':'(Annual)'}
       </div>
-      <div style={{fontSize:36,fontWeight:700,color:'#fff',fontVariantNumeric:'tabular-nums',lineHeight:1}}>
+      <div style={{fontSize:36,fontWeight:700,color:'var(--hero-number)',fontVariantNumeric:'tabular-nums',lineHeight:1}}>
         <AnimNum value={pp(result.finalTakeHome,freq)}/>
       </div>
-      <div style={{fontSize:12,color:'rgba(255,255,255,0.6)',marginTop:4}}>
+      <div style={{fontSize:12,color:'var(--hero-muted)',marginTop:4}}>
         {freq==='monthly'?`${fmt(result.finalTakeHome)} per year · ${fmt(result.finalTakeHome/12)} per month`:`${fmt(result.finalTakeHome/12)} per month`}
       </div>
-      <div style={{display:'flex',gap:12,marginTop:14,paddingTop:12,borderTop:'1px solid rgba(255,255,255,0.18)',flexWrap:'wrap'}}>
+      <div style={{display:'flex',gap:12,marginTop:14,paddingTop:12,borderTop:'1px solid var(--hero-divider)',flexWrap:'wrap'}}>
         {[
           {label:'Effective Rate', value:pct(result.effectiveRate)},
           {label:'Marginal Rate',  value:pct(result.marginalRate)},
@@ -1647,15 +1666,15 @@ function TakeHomeHero({ result, freq }) {
           {label:'Nat. Insurance', value:fmt(pp(result.niAmount,freq))},
         ].map((item,i)=>(
           <div key={i} style={{flex:'1 1 auto',minWidth:70}}>
-            <div style={{fontSize:9,color:'rgba(255,255,255,0.6)',fontWeight:600,letterSpacing:'.08em',textTransform:'uppercase'}}>{item.label}</div>
-            <div style={{fontSize:15,fontWeight:700,color:'#fff',marginTop:2}}>{item.value}</div>
+            <div style={{fontSize:9,color:'var(--hero-muted)',fontWeight:600,letterSpacing:'.08em',textTransform:'uppercase'}}>{item.label}</div>
+            <div style={{fontSize:15,fontWeight:700,color:'var(--hero-text)',marginTop:2}}>{item.value}</div>
           </div>
         ))}
       </div>
       {result.bon>0&&(
-        <div style={{marginTop:10,paddingTop:8,borderTop:'1px solid rgba(255,255,255,0.15)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-          <span style={{fontSize:11,color:'rgba(255,255,255,0.65)'}}>Incl. bonus ({fmt(result.bon)})</span>
-          <span style={{fontSize:14,fontWeight:700,color:'rgba(255,255,255,0.9)'}}>{fmt(pp(result.finalTakeHomeBonus,freq))}</span>
+        <div style={{marginTop:10,paddingTop:8,borderTop:'1px solid var(--hero-divider)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <span style={{fontSize:11,color:'var(--hero-muted)'}}>Incl. bonus ({fmt(result.bon)})</span>
+          <span style={{fontSize:14,fontWeight:700,color:'var(--hero-text)'}}>{fmt(pp(result.finalTakeHomeBonus,freq))}</span>
         </div>
       )}
     </div>
@@ -1685,13 +1704,13 @@ function AniSummaryCard({ ccResult }) {
   const pctUsed = Math.min(1, ani / 100000);
   const color = eligible ? 'var(--green)' : 'var(--red)';
   return (
-    <Card>
-      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)',marginBottom:8}}>Adjusted Net Income</div>
+    <div style={{background:'var(--hero-bg)',border:'2px solid var(--hero-border)',borderRadius:16,padding:'22px 20px',animation:'fadeUp .4s ease both'}}>
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--hero-muted)',marginBottom:8}}>Adjusted Net Income</div>
       <div style={{fontSize:28,fontWeight:700,color,fontVariantNumeric:'tabular-nums'}}><AnimNum value={ani}/></div>
-      <div style={{height:6,borderRadius:99,background:'var(--border)',marginTop:10,overflow:'hidden'}}>
+      <div style={{height:6,borderRadius:99,background:'var(--hero-divider)',marginTop:10,overflow:'hidden'}}>
         <div style={{height:'100%',width:`${pctUsed*100}%`,background:color,borderRadius:99,transition:'width .4s'}}/>
       </div>
-      <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'var(--muted)',marginTop:4}}>
+      <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'var(--hero-muted)',marginTop:4}}>
         <span>£0</span><span>£100,000</span>
       </div>
       <div style={{marginTop:10,padding:'8px 10px',borderRadius:8,
@@ -1714,8 +1733,8 @@ function AniSummaryCard({ ccResult }) {
           )
         }
       </div>
-      <div style={{fontSize:11,color:'var(--muted)',marginTop:8}}>ANI = taxable income less personal pension contributions. Adjust salary sacrifice in the Calculator tab to change this.</div>
-    </Card>
+      <div style={{fontSize:11,color:'var(--hero-muted)',marginTop:8}}>ANI = taxable income less personal pension contributions. Adjust salary sacrifice in the Calculator tab to change this.</div>
+    </div>
   );
 }
 
@@ -1910,25 +1929,25 @@ function ChildcarePage({ inputs, setInputs, result, ccResult: passedCcResult }) 
 function BudgetHero({ budget }) {
   const { monthlyTakeHome, totalExpenses, remaining } = budget;
   return (
-    <div style={{background:'var(--accent)',borderRadius:16,padding:'22px 20px',animation:'fadeUp .4s ease both'}}>
-      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:'rgba(255,255,255,0.7)',marginBottom:4}}>
+    <div style={{background:'var(--hero-bg)',border:'2px solid var(--hero-border)',borderRadius:16,padding:'22px 20px',animation:'fadeUp .4s ease both'}}>
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:'var(--hero-muted)',marginBottom:4}}>
         Leftover Monthly Cash
       </div>
-      <div style={{fontSize:36,fontWeight:700,color:'#fff',fontVariantNumeric:'tabular-nums',lineHeight:1}}>
+      <div style={{fontSize:36,fontWeight:700,color:'var(--hero-number)',fontVariantNumeric:'tabular-nums',lineHeight:1}}>
         <AnimNum value={remaining}/>
       </div>
-      <div style={{fontSize:12,color:'rgba(255,255,255,0.6)',marginTop:4}}>
+      <div style={{fontSize:12,color:'var(--hero-muted)',marginTop:4}}>
         After all planned expenses
       </div>
-      <div style={{display:'flex',gap:12,marginTop:14,paddingTop:12,borderTop:'1px solid rgba(255,255,255,0.18)',flexWrap:'wrap'}}>
+      <div style={{display:'flex',gap:12,marginTop:14,paddingTop:12,borderTop:'1px solid var(--hero-divider)',flexWrap:'wrap'}}>
         {[
           {label:'Income', value:fmt(monthlyTakeHome)},
           {label:'Expenses', value:fmt(totalExpenses)},
           {label:'Saved %', value:pct(monthlyTakeHome > 0 ? budget.savings / monthlyTakeHome : 0)},
         ].map((item,i)=>(
           <div key={i} style={{flex:'1 1 auto',minWidth:70}}>
-            <div style={{fontSize:9,color:'rgba(255,255,255,0.6)',fontWeight:600,letterSpacing:'.08em',textTransform:'uppercase'}}>{item.label}</div>
-            <div style={{fontSize:15,fontWeight:700,color:'#fff',marginTop:2}}>{item.value}</div>
+            <div style={{fontSize:9,color:'var(--hero-muted)',fontWeight:600,letterSpacing:'.08em',textTransform:'uppercase'}}>{item.label}</div>
+            <div style={{fontSize:15,fontWeight:700,color:'var(--hero-text)',marginTop:2}}>{item.value}</div>
           </div>
         ))}
       </div>
@@ -2265,168 +2284,403 @@ function ResultsPanel({ result, inputs }) {
 // APP
 // ═══════════════════════════════════════════════════════════════════════════════
 async function exportToExcel(inputs, result, ccResult, budget) {
-  const wb = new ExcelJS.Workbook();
-  wb.creator = 'UK Salary Calculator';
-  wb.lastModifiedBy = 'UK Salary Calculator';
-  wb.created = new Date();
-  wb.modified = new Date();
-
-  // STYLES
-  // STYLES
-  const accentColor = 'FF5677FC';
-  const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: accentColor } };
-  const subHeaderFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F3F4' } };
-  const whiteText = { name: 'Segoe UI', color: { argb: 'FFFFFFFF' }, bold: true, size: 11 };
-  const boldText = { name: 'Segoe UI', bold: true, size: 11 };
-  const normalText = { name: 'Segoe UI', size: 11 };
-  const centerAlign = { horizontal: 'center', vertical: 'middle' };
-  const currencyFmt = '"£"#,##0.00;[Red]("-£"#,##0.00)';
-
-  const styleSheet = ws => {
-    ws.getRows(1, 100).forEach(row => {
-      row.font = normalText;
-    });
+  // ── DESIGN TOKENS (light mode palette → ARGB hex) ──────────────────────
+  const C = {
+    accent:   'FFC07830', // warm gold  --accent  oklch(56% 0.14 55)
+    accentLt: 'FFFCF0E0', // light gold tint
+    bg:       'FFF8F4EC', // parchment  --bg
+    bg2:      'FFEDE9DF', // deeper bg  --bg2
+    surface:  'FFFDFAF6', // --surface
+    surf2:    'FFF3EFE5', // --surface2
+    border:   'FFDDD9CE', // --border
+    text:     'FF2C2214', // --text
+    muted:    'FF7B7060', // --muted
+    green:    'FF3A7A50', // --green
+    greenLt:  'FFE4F5EC',
+    red:      'FFB83232', // --red
+    redLt:    'FFFDE8E8',
+    white:    'FFFFFFFF',
+    // chart segment colours matching --c1..c4 + c5
+    c1: '#C07830', c2: '#3A96A2', c3: '#57A870', c4: '#C2AC6E', c5: '#7070BA',
   };
 
-  // 1. SALARY & TAX SHEET
-  const ws1 = wb.addWorksheet('Salary & Tax');
-  ws1.columns = [{ width: 35 }, { width: 22 }, { width: 22 }];
-  
-  ws1.mergeCells('A1:C1');
-  ws1.getCell('A1').value = 'UK Take-Home Salary Report (' + inputs.taxYear + ')';
-  ws1.getCell('A1').font = { name: 'Segoe UI', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
-  ws1.getCell('A1').fill = headerFill;
-  ws1.getCell('A1').alignment = centerAlign;
-  ws1.getRow(1).height = 30;
+  // ── FONT / STYLE HELPERS ────────────────────────────────────────────────
+  const f  = (sz, bold, argb) => ({ name: 'Segoe UI', size: sz, bold: !!bold, color: { argb } });
+  const fl = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
+  const al = (h, v = 'middle', indent = 0) => ({ horizontal: h, vertical: v, indent });
+  const bdr = argb => ({ style: 'thin', color: { argb } });
+  const F = {
+    title:   f(13, true,  C.white),
+    label:   f(9,  true,  C.muted),
+    normal:  f(10, false, C.text),
+    bold:    f(10, true,  C.text),
+    accent:  f(10, true,  C.accent),
+    heroNum: f(20, true,  C.accent),
+    green:   f(10, true,  C.green),
+    red:     f(10, false, C.red),
+  };
+  const currFmt = '"£"#,##0.00';
+  const pctFmt  = '0.00%';
 
-  ws1.addRow([]);
-  const sHead = ws1.addRow(['Summary', 'Annual', 'Monthly']);
-  sHead.font = boldText;
-  sHead.fill = subHeaderFill;
+  // set multiple properties on one cell
+  const sc = (cell, { value, font, fill, align, numFmt, border } = {}) => {
+    if (value   !== undefined) cell.value     = value;
+    if (font)                  cell.font      = font;
+    if (fill)                  cell.fill      = fl(fill);
+    if (align)                 cell.alignment = align;
+    if (numFmt)                cell.numFmt    = numFmt;
+    if (border)                cell.border    = border;
+  };
 
-  const summaryRows = [
-    ['Gross Salary', result.sal, result.sal / 12],
-    ['Income Tax', -result.incomeTax, -result.incomeTax / 12],
-    ['National Insurance', -result.niAmount, -result.niAmount / 12],
-    ['Student Loan', -result.slAmount, -result.slAmount / 12],
-    ['Pension Contribution', -(result.pensionSacAnnual + result.pensionReliefNet), -(result.pensionSacAnnual + result.pensionReliefNet) / 12],
-    ['Take-Home Pay', result.finalTakeHome, result.finalTakeHome / 12],
-  ];
+  // ── CANVAS DONUT CHART ──────────────────────────────────────────────────
+  // Returns base64 PNG (no data-URL prefix). Segments: [{label, value, color}]
+  // centerLabel: text shown above the centre percentage (first segment %)
+  function renderDonut(segments, centerLabel = '') {
+    const SZ = 260, LEG_H = 70;
+    const canvas = document.createElement('canvas');
+    canvas.width = SZ; canvas.height = SZ + LEG_H;
+    const ctx = canvas.getContext('2d');
+    const cx = SZ / 2, cy = SZ / 2, R = SZ / 2 - 14, Ri = R * 0.52;
+    const total = segments.reduce((s, g) => s + g.value, 0);
 
-  summaryRows.forEach(r => {
-    const row = ws1.addRow(r);
-    row.getCell(2).numFmt = currencyFmt;
-    row.getCell(3).numFmt = currencyFmt;
-    if (r[0] === 'Take-Home Pay') {
-      row.font = boldText;
-      row.getCell(2).font = { ...boldText, color: { argb: 'FF5677FC' } };
-      row.getCell(3).font = { ...boldText, color: { argb: 'FF5677FC' } };
+    // parchment background
+    ctx.fillStyle = '#F8F4EC';
+    ctx.fillRect(0, 0, SZ, SZ + LEG_H);
+
+    if (total > 0) {
+      // draw segments
+      let angle = -Math.PI / 2;
+      segments.forEach(g => {
+        const sweep = (g.value / total) * 2 * Math.PI;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, R, angle, angle + sweep);
+        ctx.closePath();
+        ctx.fillStyle = g.color;
+        ctx.fill();
+        angle += sweep;
+      });
+      // hairline dividers between segments
+      angle = -Math.PI / 2;
+      segments.forEach(g => {
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + R * Math.cos(angle), cy + R * Math.sin(angle));
+        ctx.strokeStyle = '#F8F4EC';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        angle += (g.value / total) * 2 * Math.PI;
+      });
+    } else {
+      ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI);
+      ctx.fillStyle = '#DDD9CE'; ctx.fill();
     }
-  });
 
-  ws1.addRow([]);
-  ws1.addRow(['Tax Band Breakdown']).font = boldText;
-  const tHead = ws1.addRow(['Band', 'Taxable Amount', 'Rate', 'Tax Paid']);
-  tHead.font = boldText;
-  tHead.fill = subHeaderFill;
-  result.bandBreakdown.forEach(b => {
-    const row = ws1.addRow([b.name, b.taxable, b.rate, b.amount]);
-    row.getCell(2).numFmt = currencyFmt;
-    row.getCell(3).numFmt = '0%';
-    row.getCell(4).numFmt = currencyFmt;
-  });
-  styleSheet(ws1);
+    // donut hole
+    ctx.beginPath(); ctx.arc(cx, cy, Ri, 0, 2 * Math.PI);
+    ctx.fillStyle = '#F8F4EC'; ctx.fill();
 
-  // 2. CHILDCARE SHEET
-  const ws2 = wb.addWorksheet('Childcare Planner');
-  ws2.columns = [{ width: 35 }, { width: 22 }, { width: 22 }];
-  
-  ws2.mergeCells('A1:C1');
-  ws2.getCell('A1').value = 'Childcare Impact Report';
-  ws2.getCell('A1').font = { name: 'Segoe UI', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
-  ws2.getCell('A1').fill = headerFill;
-  ws2.getCell('A1').alignment = centerAlign;
-  ws2.getRow(1).height = 30;
+    // centre text
+    ctx.textAlign = 'center';
+    if (centerLabel && total > 0) {
+      const pct = Math.round(segments[0].value / total * 100);
+      ctx.fillStyle = '#7B7060';
+      ctx.font = 'bold 8px Segoe UI, Arial, sans-serif';
+      ctx.fillText(centerLabel.toUpperCase(), cx, cy - 5);
+      ctx.fillStyle = '#2C2214';
+      ctx.font = 'bold 17px Segoe UI, Arial, sans-serif';
+      ctx.fillText(pct + '%', cx, cy + 13);
+    }
 
-  ws2.addRow([]);
-  const cHead = ws2.addRow(['Scenario Comparison', 'Current', 'Optimised']);
-  cHead.font = boldText;
-  cHead.fill = subHeaderFill;
+    // legend (up to 2 rows of 3)
+    let lx = 8, ly = SZ + 14;
+    segments.forEach((g, i) => {
+      if (i > 0 && i % 3 === 0) { lx = 8; ly += 22; }
+      ctx.fillStyle = g.color;
+      ctx.fillRect(lx, ly, 8, 8);
+      ctx.fillStyle = '#7B7060';
+      ctx.font = '9px Segoe UI, Arial, sans-serif';
+      ctx.textAlign = 'left';
+      const pStr = total > 0 ? ' ' + Math.round(g.value / total * 100) + '%' : '';
+      ctx.fillText(g.label + pStr, lx + 11, ly + 8);
+      lx += SZ / 3;
+    });
 
-  ws2.addRow(['Adjusted Net Income (ANI)', ccResult.ani, ccResult.eligible ? ccResult.ani : 100000]).getCell(2).numFmt = currencyFmt;
-  ws2.getCell('C4').numFmt = currencyFmt;
-  ws2.addRow(['Take-Home Pay', ccResult.currentTakeHome, ccResult.optimisedTakeHome]).getCell(2).numFmt = currencyFmt;
-  ws2.getCell('C5').numFmt = currencyFmt;
-  ws2.addRow(['Nursery Fees (Net)', -ccResult.currentTotalChildcareCost, -ccResult.optimisedTotalChildcareCost]).getCell(2).numFmt = currencyFmt;
-  ws2.getCell('C6').numFmt = currencyFmt;
-  const liqRow = ws2.addRow(['Net Cash in Pocket', ccResult.currentLiquidity, ccResult.optimisedLiquidity]);
-  liqRow.font = boldText;
-  liqRow.getCell(2).numFmt = currencyFmt;
-  liqRow.getCell(3).numFmt = currencyFmt;
-  liqRow.getCell(3).font = { ...boldText, color: { argb: 'FF00A86B' } };
-
-  ws2.addRow([]);
-  ws2.addRow(['Benefit Retention Status']).font = boldText;
-  ws2.addRow(['Status:', ccResult.eligible ? 'ELIGIBLE' : 'INELIGIBLE (Cliff Edge)']).getCell(2).font = { bold: true, color: { argb: ccResult.eligible ? 'FF00A86B' : 'FFD32F2F' } };
-  if (!ccResult.eligible) {
-    ws2.addRow(['Extra Pension Needed:', ccResult.aniGap]).getCell(2).numFmt = currencyFmt;
-    ws2.addRow(['Net Benefit of Sacrificing:', ccResult.netBenefit]).getCell(2).numFmt = currencyFmt;
+    return canvas.toDataURL('image/png').split(',')[1];
   }
-  styleSheet(ws2);
 
-  // 3. BUDGET SHEET
-  const ws3 = wb.addWorksheet('Budget Planner');
-  ws3.columns = [{ width: 35 }, { width: 22 }];
+  // ── WORKBOOK ─────────────────────────────────────────────────────────────
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'UK Salary Calculator';
+  wb.created = new Date();
 
-  ws3.mergeCells('A1:B1');
-  ws3.getCell('A1').value = 'Monthly Budget Report';
-  ws3.getCell('A1').font = { name: 'Segoe UI', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
-  ws3.getCell('A1').fill = headerFill;
-  ws3.getCell('A1').alignment = centerAlign;
-  ws3.getRow(1).height = 30;
-
-  ws3.addRow([]);
-  const bIncRow = ws3.addRow(['Monthly Income', budget.monthlyTakeHome]);
-  bIncRow.getCell(2).numFmt = currencyFmt;
-  bIncRow.font = boldText;
-
-  ws3.addRow([]);
-  const bHead = ws3.addRow(['Category', 'Monthly Amount']);
-  bHead.font = boldText;
-  bHead.fill = subHeaderFill;
-
-  const budgetItems = [
-    ['Housing & Council Tax', budget.housing],
-    ['Utilities & Bills', budget.utilities],
-    ['Transport', budget.transport],
-    ['Living & Lifestyle', budget.lifestyle],
-    ['Savings & Investments', budget.financial],
+  // ═════════════════════════════════════════════════════════════════════════
+  // SHEET 1 — SALARY & TAX
+  // ═════════════════════════════════════════════════════════════════════════
+  const ws1 = wb.addWorksheet('Salary & Tax');
+  ws1.columns = [
+    { width: 32 }, // A label
+    { width: 16 }, // B annual / taxable
+    { width: 11 }, // C monthly / rate
+    { width: 16 }, // D monthly / tax paid
+    { width: 2  }, // E spacer
+    { width: 13 }, { width: 13 }, { width: 13 }, { width: 13 }, { width: 13 }, // F-J chart
   ];
 
-  budgetItems.forEach(item => {
-    ws3.addRow(item).getCell(2).numFmt = currencyFmt;
+  // Title
+  ws1.mergeCells('A1:D1'); ws1.getRow(1).height = 36;
+  sc(ws1.getCell('A1'), {
+    value: `UK Take-Home Salary Report  ·  ${inputs.taxYear}  ·  ${inputs.region === 'scotland' ? 'Scotland' : 'England / Wales / NI'}`,
+    font: F.title, fill: C.accent, align: al('left', 'middle', 1),
+  });
+
+  // Spacer
+  ws1.getRow(2).height = 10;
+
+  // Hero take-home
+  ws1.mergeCells('A3:D3'); ws1.getRow(3).height = 18;
+  sc(ws1.getCell('A3'), { value: 'TAKE-HOME PAY', font: F.label, fill: C.bg, align: al('left', 'bottom', 1) });
+  ws1.mergeCells('A4:D4'); ws1.getRow(4).height = 34;
+  sc(ws1.getCell('A4'), { value: result.finalTakeHome, font: F.heroNum, fill: C.bg, numFmt: '"£"#,##0.00', align: al('left', 'middle', 1) });
+  ws1.mergeCells('A5:D5'); ws1.getRow(5).height = 18;
+  sc(ws1.getCell('A5'), {
+    value: `£${Math.round(result.finalTakeHome / 12).toLocaleString('en-GB')}/mo  ·  Effective rate ${(result.effectiveRate * 100).toFixed(1)}%  ·  Marginal rate ${(result.marginalRate * 100).toFixed(1)}%`,
+    font: f(9, false, C.muted), fill: C.bg, align: al('left', 'top', 1),
+  });
+
+  ws1.getRow(6).height = 10;
+
+  // Section header
+  ws1.mergeCells('A7:D7'); ws1.getRow(7).height = 24;
+  sc(ws1.getCell('A7'), { value: 'INCOME & DEDUCTIONS', font: F.label, fill: C.bg2, align: al('left', 'middle', 1) });
+
+  // Column headers row
+  ws1.getRow(8).height = 22;
+  [['', 1, 'left'], ['Annual', 2, 'right'], ['Monthly', 4, 'right']].forEach(([v, col, h]) => {
+    sc(ws1.getCell(8, col), {
+      value: v, font: F.label, fill: C.surf2, align: al(h, 'middle', h === 'left' ? 1 : 0),
+      border: { bottom: bdr(C.border) },
+    });
+  });
+
+  // Summary rows
+  const totalPension = result.pensionSacAnnual + result.pensionReliefNet;
+  const sumRows = [
+    { label: 'Gross Salary',         ann: result.sal,            type: 'gross' },
+    { label: 'Income Tax',           ann: -result.incomeTax,     type: 'ded' },
+    { label: 'National Insurance',   ann: -result.niAmount,      type: 'ded' },
+    ...(result.slAmount > 0   ? [{ label: 'Student Loan',         ann: -result.slAmount,  type: 'ded' }] : []),
+    ...(totalPension > 0      ? [{ label: 'Pension (Employee)',   ann: -totalPension,     type: 'ded' }] : []),
+    null,
+    { label: 'Take-Home Pay',        ann: result.finalTakeHome,  type: 'takehome' },
+    ...(result.bon > 0        ? [{ label: 'Incl. Bonus',         ann: result.finalTakeHomeBonus, type: 'takehome' }] : []),
+  ];
+
+  let rn = 9, alt = 0;
+  sumRows.forEach(r => {
+    if (r === null) { ws1.getRow(rn).height = 6; rn++; return; }
+    ws1.getRow(rn).height = 22;
+    const bg = r.type === 'takehome' ? C.accentLt : alt % 2 === 0 ? C.surface : C.white;
+    alt++;
+    sc(ws1.getCell(rn, 1), { value: r.label, font: r.type === 'takehome' ? F.accent : r.type === 'gross' ? F.bold : F.normal, fill: bg, align: al('left', 'middle', 1) });
+    [2, 4].forEach((col, i) => {
+      const val = i === 0 ? r.ann : r.ann / 12;
+      sc(ws1.getCell(rn, col), {
+        value: val,
+        font: r.type === 'takehome' ? F.accent : r.type === 'ded' ? F.red : F.bold,
+        fill: bg, numFmt: currFmt, align: al('right', 'middle'),
+      });
+    });
+    rn++;
+  });
+
+  // Band breakdown
+  ws1.getRow(rn).height = 12; rn++;
+  ws1.mergeCells(`A${rn}:D${rn}`); ws1.getRow(rn).height = 24;
+  sc(ws1.getCell(rn, 1), { value: 'TAX BAND BREAKDOWN', font: F.label, fill: C.bg2, align: al('left', 'middle', 1) });
+  rn++;
+  ws1.getRow(rn).height = 22;
+  [['Band', 1, 'left'], ['Taxable', 2, 'right'], ['Rate', 3, 'right'], ['Tax Paid', 4, 'right']].forEach(([v, col, h]) => {
+    sc(ws1.getCell(rn, col), { value: v, font: F.label, fill: C.surf2, align: al(h, 'middle', h === 'left' ? 1 : 0), border: { bottom: bdr(C.border) } });
+  });
+  rn++;
+  result.bandBreakdown.forEach((b, idx) => {
+    ws1.getRow(rn).height = 20;
+    const bg = idx % 2 === 0 ? C.surface : C.white;
+    sc(ws1.getCell(rn, 1), { value: b.name,    font: F.normal, fill: bg, align: al('left',  'middle', 1) });
+    sc(ws1.getCell(rn, 2), { value: b.taxable, font: F.normal, fill: bg, numFmt: currFmt, align: al('right', 'middle') });
+    sc(ws1.getCell(rn, 3), { value: b.rate,    font: F.normal, fill: bg, numFmt: pctFmt,  align: al('right', 'middle') });
+    sc(ws1.getCell(rn, 4), { value: b.amount,  font: F.normal, fill: bg, numFmt: currFmt, align: al('right', 'middle') });
+    rn++;
+  });
+
+  // Salary donut chart
+  const salSegs = [
+    { label: 'Take Home',      value: Math.max(0, result.finalTakeHome), color: C.c3 },
+    { label: 'Income Tax',     value: result.incomeTax,                  color: C.c1 },
+    { label: 'Nat. Insurance', value: result.niAmount,                   color: C.c2 },
+    ...(result.slAmount > 0 ? [{ label: 'Student Loan', value: result.slAmount, color: C.c4 }] : []),
+    ...(totalPension > 0    ? [{ label: 'Pension',      value: totalPension,    color: C.c5 }] : []),
+  ].filter(s => s.value > 0);
+  wb.addImage({ base64: renderDonut(salSegs, 'Take Home'), extension: 'png' });
+  ws1.addImage(wb.model.media.length - 1, { tl: { col: 5, row: 0 }, ext: { width: 260, height: 330 } });
+
+  // ═════════════════════════════════════════════════════════════════════════
+  // SHEET 2 — CHILDCARE PLANNER
+  // ═════════════════════════════════════════════════════════════════════════
+  const ws2 = wb.addWorksheet('Childcare Planner');
+  ws2.columns = [
+    { width: 32 }, { width: 18 }, { width: 18 }, { width: 2 },
+    { width: 13 }, { width: 13 }, { width: 13 }, { width: 13 }, { width: 13 },
+  ];
+
+  ws2.mergeCells('A1:C1'); ws2.getRow(1).height = 36;
+  sc(ws2.getCell('A1'), { value: 'Childcare Cliff Edge Report', font: F.title, fill: C.accent, align: al('left', 'middle', 1) });
+  ws2.getRow(2).height = 10;
+
+  // ANI status banner
+  ws2.mergeCells('A3:C3'); ws2.getRow(3).height = 28;
+  sc(ws2.getCell('A3'), {
+    value: ccResult.eligible
+      ? `✓  ANI: ${new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP',maximumFractionDigits:0}).format(ccResult.ani)}  ·  Childcare benefits SAFE`
+      : `✗  ANI: ${new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP',maximumFractionDigits:0}).format(ccResult.ani)}  ·  ABOVE £100,000 threshold`,
+    font: { name: 'Segoe UI', size: 11, bold: true, color: { argb: ccResult.eligible ? C.green : C.red } },
+    fill: ccResult.eligible ? C.greenLt : C.redLt,
+    align: al('left', 'middle', 1),
+  });
+  ws2.getRow(4).height = 10;
+
+  // Column headers
+  ws2.getRow(5).height = 24;
+  [['Scenario Comparison', 1, 'left'], ['Current', 2, 'right'], ['Optimised', 3, 'right']].forEach(([v, col, h]) => {
+    sc(ws2.getCell(5, col), { value: v, font: F.label, fill: C.bg2, align: al(h, 'middle', h === 'left' ? 1 : 0), border: { bottom: bdr(C.border) } });
+  });
+
+  const ccRows = [
+    { label: 'Adjusted Net Income', a: ccResult.ani,                       b: ccResult.eligible ? ccResult.ani : 100000 },
+    { label: 'Take-Home Pay',       a: ccResult.currentTakeHome,           b: ccResult.optimisedTakeHome },
+    { label: 'Nursery Fees (Net)',  a: -ccResult.currentTotalChildcareCost, b: -ccResult.optimisedTotalChildcareCost },
+    { label: 'Net Cash in Pocket', a: ccResult.currentLiquidity,           b: ccResult.optimisedLiquidity, hl: true },
+  ];
+  ccRows.forEach((r, idx) => {
+    const rn2 = idx + 6;
+    ws2.getRow(rn2).height = 22;
+    const bg = r.hl ? C.accentLt : idx % 2 === 0 ? C.surface : C.white;
+    sc(ws2.getCell(rn2, 1), { value: r.label, font: r.hl ? F.accent : F.normal, fill: bg, align: al('left', 'middle', 1) });
+    sc(ws2.getCell(rn2, 2), { value: r.a, font: r.hl ? F.accent : F.normal, fill: bg, numFmt: currFmt, align: al('right', 'middle') });
+    sc(ws2.getCell(rn2, 3), { value: r.b, font: r.hl ? F.accent : F.normal, fill: bg, numFmt: currFmt, align: al('right', 'middle') });
+  });
+
+  if (!ccResult.eligible) {
+    const vn = 11; ws2.getRow(vn).height = 8;
+    const vn2 = 12; ws2.getRow(vn2).height = 26;
+    ws2.mergeCells(`A${vn2}:C${vn2}`);
+    const verdict = ccResult.netBenefit >= 0;
+    sc(ws2.getCell(vn2, 1), {
+      value: verdict
+        ? `✓ Worth it — extra pension gives you ${new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP',maximumFractionDigits:0}).format(ccResult.netBenefit)}/yr MORE cash in pocket`
+        : `✗ Costs more day-to-day — extra pension reduces cash by ${new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP',maximumFractionDigits:0}).format(Math.abs(ccResult.netBenefit))}/yr`,
+      font: { name: 'Segoe UI', size: 10, bold: true, color: { argb: verdict ? C.green : C.red } },
+      fill: verdict ? C.greenLt : C.redLt,
+      align: al('left', 'middle', 1),
+    });
+  }
+
+  // Childcare donut chart
+  const ccSegs = [
+    { label: 'Current Cash',  value: Math.max(0, ccResult.currentLiquidity),          color: C.c3 },
+    { label: 'Nursery Bill',  value: Math.max(0, ccResult.currentTotalChildcareCost),  color: C.c1 },
+    ...(!ccResult.eligible ? [{ label: 'Optimised Cash', value: Math.max(0, ccResult.optimisedLiquidity), color: C.c2 }] : []),
+  ].filter(s => s.value > 0);
+  wb.addImage({ base64: renderDonut(ccSegs, 'Cash'), extension: 'png' });
+  ws2.addImage(wb.model.media.length - 1, { tl: { col: 4, row: 0 }, ext: { width: 260, height: 330 } });
+
+  // ═════════════════════════════════════════════════════════════════════════
+  // SHEET 3 — BUDGET PLANNER
+  // ═════════════════════════════════════════════════════════════════════════
+  const ws3 = wb.addWorksheet('Budget Planner');
+  ws3.columns = [
+    { width: 32 }, { width: 18 }, { width: 2 },
+    { width: 13 }, { width: 13 }, { width: 13 }, { width: 13 }, { width: 13 },
+  ];
+
+  ws3.mergeCells('A1:B1'); ws3.getRow(1).height = 36;
+  sc(ws3.getCell('A1'), { value: 'Monthly Budget Report', font: F.title, fill: C.accent, align: al('left', 'middle', 1) });
+  ws3.getRow(2).height = 10;
+
+  // Hero monthly income
+  ws3.mergeCells('A3:B3'); ws3.getRow(3).height = 18;
+  sc(ws3.getCell('A3'), { value: 'MONTHLY TAKE-HOME', font: F.label, fill: C.bg, align: al('left', 'bottom', 1) });
+  ws3.mergeCells('A4:B4'); ws3.getRow(4).height = 34;
+  sc(ws3.getCell('A4'), { value: budget.monthlyTakeHome, font: F.heroNum, fill: C.bg, numFmt: '"£"#,##0.00', align: al('left', 'middle', 1) });
+  ws3.getRow(5).height = 10;
+
+  // Column headers
+  ws3.getRow(6).height = 24;
+  [['Category', 1, 'left'], ['Monthly Amount', 2, 'right']].forEach(([v, col, h]) => {
+    sc(ws3.getCell(6, col), { value: v, font: F.label, fill: C.bg2, align: al(h, 'middle', h === 'left' ? 1 : 0), border: { bottom: bdr(C.border) } });
+  });
+
+  const budgetCats = [
+    { label: 'Housing & Council Tax', val: budget.housing },
+    { label: 'Utilities & Bills',     val: budget.utilities },
+    { label: 'Transport',             val: budget.transport },
+    { label: 'Living & Lifestyle',    val: budget.lifestyle },
+    { label: 'Savings & Investments', val: budget.financial },
+  ];
+
+  let br = 7, balt = 0;
+  budgetCats.forEach(b => {
+    ws3.getRow(br).height = 22;
+    const bg = balt % 2 === 0 ? C.surface : C.white;
+    sc(ws3.getCell(br, 1), { value: b.label, font: F.normal, fill: bg, align: al('left',  'middle', 1) });
+    sc(ws3.getCell(br, 2), { value: b.val,   font: F.normal, fill: bg, numFmt: currFmt, align: al('right', 'middle') });
+    br++; balt++;
   });
 
   if (budget.carsCount > 0) {
-    ws3.addRow([]);
-    ws3.addRow(['Vehicle Breakdown']).font = boldText;
-    budget.carDetails.forEach(car => {
-      ws3.addRow([car.name, car.total]).getCell(2).numFmt = currencyFmt;
+    ws3.getRow(br).height = 8; br++;
+    ws3.getRow(br).height = 22;
+    sc(ws3.getCell(br, 1), { value: 'VEHICLE BREAKDOWN', font: F.label, fill: C.bg2, align: al('left', 'middle', 1) });
+    br++;
+    budget.carDetails.forEach((car, idx) => {
+      ws3.getRow(br).height = 20;
+      const bg = idx % 2 === 0 ? C.surface : C.white;
+      sc(ws3.getCell(br, 1), { value: car.name,  font: F.normal, fill: bg, align: al('left',  'middle', 1) });
+      sc(ws3.getCell(br, 2), { value: car.total, font: F.normal, fill: bg, numFmt: currFmt, align: al('right', 'middle') });
+      br++;
     });
   }
 
-  ws3.addRow([]);
-  const totRow = ws3.addRow(['Total Outgoings', budget.totalExpenses]);
-  totRow.font = boldText;
-  totRow.getCell(2).numFmt = currencyFmt;
-  const remRow = ws3.addRow(['Remaining Balance', budget.remaining]);
-  remRow.font = boldText;
-  remRow.getCell(2).numFmt = currencyFmt;
-  remRow.getCell(2).font = { name: 'Segoe UI', color: { argb: budget.remaining >= 0 ? 'FF00A86B' : 'FFD32F2F' }, bold: true };
-  styleSheet(ws3);
+  ws3.getRow(br).height = 8; br++;
+  ws3.getRow(br).height = 24;
+  sc(ws3.getCell(br, 1), { value: 'Total Outgoings',  font: F.bold, fill: C.surf2, align: al('left',  'middle', 1) });
+  sc(ws3.getCell(br, 2), { value: budget.totalExpenses, font: F.bold, fill: C.surf2, numFmt: currFmt, align: al('right', 'middle') });
+  br++;
 
-    const buffer = await wb.xlsx.writeBuffer();
-  saveAs(new Blob([buffer]), 'UK_Salary_Report_' + new Date().toISOString().split('T')[0] + '.xlsx');
+  ws3.getRow(br).height = 30;
+  const remPos  = budget.remaining >= 0;
+  const remFont = { name: 'Segoe UI', size: 12, bold: true, color: { argb: remPos ? C.green : C.red } };
+  sc(ws3.getCell(br, 1), { value: 'Remaining Balance',  font: remFont, fill: remPos ? C.greenLt : C.redLt, align: al('left',  'middle', 1) });
+  sc(ws3.getCell(br, 2), { value: budget.remaining,     font: remFont, fill: remPos ? C.greenLt : C.redLt, numFmt: currFmt, align: al('right', 'middle') });
+
+  // Budget donut chart
+  const budgetSegs = [
+    { label: 'Housing',   value: budget.housing,                     color: C.c1 },
+    { label: 'Utilities', value: budget.utilities,                   color: C.c2 },
+    { label: 'Transport', value: budget.transport,                   color: C.c3 },
+    { label: 'Lifestyle', value: budget.lifestyle,                   color: C.c4 },
+    { label: 'Savings',   value: budget.financial,                   color: C.c5 },
+    { label: 'Leftover',  value: Math.max(0, budget.remaining),      color: '#A8A8A0' },
+  ].filter(s => s.value > 0);
+  if (budgetSegs.length > 0) {
+    wb.addImage({ base64: renderDonut(budgetSegs, 'Budget'), extension: 'png' });
+    ws3.addImage(wb.model.media.length - 1, { tl: { col: 3, row: 0 }, ext: { width: 260, height: 330 } });
+  }
+
+  // ── Save ──────────────────────────────────────────────────────────────────
+  const buffer = await wb.xlsx.writeBuffer();
+  saveAs(new Blob([buffer]), `UK_Salary_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -2484,9 +2738,9 @@ function ComparisonSummaryPanel({ currentResult, compareResult, compareType, lef
   return (
     <div style={{display:'flex',flexDirection:'column',gap:14}}>
       <div style={{
-        background: isBetterBonus ? 'var(--green-bg)' : 'color-mix(in oklch,var(--red) 8%,var(--surface2))',
+        background: 'var(--hero-bg)',
+        border: '2px solid var(--hero-border)',
         borderRadius:16, padding:'20px 22px', animation:'fadeUp .4s ease both',
-        border: `1px solid ${isBetterBonus ? 'color-mix(in oklch,var(--green) 30%,transparent)' : 'color-mix(in oklch,var(--red) 25%,transparent)'}`,
       }}>
         <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:isBetterBonus?'var(--green)':'var(--red)',marginBottom:6}}>
           {compareType === 'prior'
@@ -2496,7 +2750,7 @@ function ComparisonSummaryPanel({ currentResult, compareResult, compareType, lef
         <div style={{fontSize:38,fontWeight:700,color:isBetterBonus?'var(--green)':'var(--red)',fontVariantNumeric:'tabular-nums',lineHeight:1.1}}>
           <AnimNum value={Math.abs(diffBonus)}/>
         </div>
-        
+
         <div style={{marginTop:8, display:'flex', flexDirection:'column', gap:2}}>
           <div style={{fontSize:12, fontWeight:600, color: diff >= 0 ? 'var(--green)' : 'var(--red)'}}>
             {diff >= 0 ? '✓ Better' : '✗ Worse'} off by {fmt(Math.abs(diff))} / yr ({fmt(Math.abs(diff)/12)} / mo) excluding bonus
@@ -2504,7 +2758,7 @@ function ComparisonSummaryPanel({ currentResult, compareResult, compareType, lef
         </div>
 
         {/* Gross Growth Section */}
-        <div style={{marginTop:12, paddingTop:10, borderTop:'1px solid rgba(0,0,0,0.05)', display:'flex', flexDirection:'column', gap:6}}>
+        <div style={{marginTop:12, paddingTop:10, borderTop:'1px solid var(--hero-divider)', display:'flex', flexDirection:'column', gap:6}}>
           {(() => {
             const nowSal = currentResult.sal;
             const nowBon = currentResult.bon;
@@ -2513,7 +2767,7 @@ function ComparisonSummaryPanel({ currentResult, compareResult, compareType, lef
 
             const salDiff = compareType === 'prior' ? nowSal - pastSal : pastSal - nowSal;
             const salPct  = (compareType === 'prior' ? pastSal : nowSal) > 0 ? (salDiff / (compareType === 'prior' ? pastSal : nowSal)) * 100 : 0;
-            
+
             const bonDiff = compareType === 'prior' ? nowBon - pastBon : pastBon - nowBon;
             const bonPct  = (compareType === 'prior' ? pastBon : nowBon) > 0 ? (bonDiff / (compareType === 'prior' ? pastBon : nowBon)) * 100 : 0;
 
@@ -2524,12 +2778,12 @@ function ComparisonSummaryPanel({ currentResult, compareResult, compareType, lef
 
             return (
               <>
-                <div style={{fontSize:12, color:'var(--text)', opacity:0.9}}>
+                <div style={{fontSize:12, color:'var(--hero-text)'}}>
                   Gross Salary <strong>{salDiff >= 0 ? 'increased' : 'decreased'}</strong> by <strong>{Math.abs(salPct).toFixed(1)}%</strong> compared to {modeText}.
                 </div>
                 {(nowBon > 0 || pastBon > 0) && (
-                  <div style={{fontSize:12, color:'var(--text)', opacity:0.9, lineHeight:1.4}}>
-                    Bonus has <strong>{bonDiff >= 0 ? 'increased' : 'decreased'}</strong> by <strong>{Math.abs(bonPct).toFixed(1)}%</strong> and is now <strong>{currentBonOfSal.toFixed(1)}%</strong> of annual salary 
+                  <div style={{fontSize:12, color:'var(--hero-text)', lineHeight:1.4}}>
+                    Bonus has <strong>{bonDiff >= 0 ? 'increased' : 'decreased'}</strong> by <strong>{Math.abs(bonPct).toFixed(1)}%</strong> and is now <strong>{currentBonOfSal.toFixed(1)}%</strong> of annual salary
                     {compareType === 'prior' && pastSal > 0 && <span> (vs <strong>{pastBonOfPastSal.toFixed(1)}%</strong> of prior year annual salary)</span>}.
                   </div>
                 )}

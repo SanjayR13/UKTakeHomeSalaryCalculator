@@ -43,7 +43,7 @@ The primary goal of this platform is to empower UK professionals with a "single 
 
 - **Core**: React (via Babel standalone for ease of deployment).
 - **Styling**: Vanilla CSS with a focus on modern glassmorphism and premium design language.
-- **Calculations**: Custom high-precision JS logic tailored to 2024-2027 UK Tax Years.
+- **Calculations**: Custom high-precision JS logic covering UK Tax Years 2023/24–2026/27.
 - **Export**: [ExcelJS](https://github.com/exceljs/exceljs) for spreadsheet generation.
 - **Persistence**: Browser LocalStorage for seamless sessions.
 
