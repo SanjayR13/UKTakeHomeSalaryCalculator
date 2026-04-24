@@ -2300,8 +2300,6 @@ async function exportToExcel(inputs, result, ccResult, budget) {
     red:      'FFB83232', // --red
     redLt:    'FFFDE8E8',
     white:    'FFFFFFFF',
-    // chart segment colours matching --c1..c4 + c5
-    c1: '#C07830', c2: '#3A96A2', c3: '#57A870', c4: '#C2AC6E', c5: '#7070BA',
   };
 
   // ── FONT / STYLE HELPERS ────────────────────────────────────────────────
@@ -2332,83 +2330,6 @@ async function exportToExcel(inputs, result, ccResult, budget) {
     if (border)                cell.border    = border;
   };
 
-  // ── CANVAS DONUT CHART ──────────────────────────────────────────────────
-  // Returns base64 PNG (no data-URL prefix). Segments: [{label, value, color}]
-  // centerLabel: text shown above the centre percentage (first segment %)
-  function renderDonut(segments, centerLabel = '') {
-    const SZ = 260, LEG_H = 70;
-    const canvas = document.createElement('canvas');
-    canvas.width = SZ; canvas.height = SZ + LEG_H;
-    const ctx = canvas.getContext('2d');
-    const cx = SZ / 2, cy = SZ / 2, R = SZ / 2 - 14, Ri = R * 0.52;
-    const total = segments.reduce((s, g) => s + g.value, 0);
-
-    // parchment background
-    ctx.fillStyle = '#F8F4EC';
-    ctx.fillRect(0, 0, SZ, SZ + LEG_H);
-
-    if (total > 0) {
-      // draw segments
-      let angle = -Math.PI / 2;
-      segments.forEach(g => {
-        const sweep = (g.value / total) * 2 * Math.PI;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, R, angle, angle + sweep);
-        ctx.closePath();
-        ctx.fillStyle = g.color;
-        ctx.fill();
-        angle += sweep;
-      });
-      // hairline dividers between segments
-      angle = -Math.PI / 2;
-      segments.forEach(g => {
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(cx + R * Math.cos(angle), cy + R * Math.sin(angle));
-        ctx.strokeStyle = '#F8F4EC';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        angle += (g.value / total) * 2 * Math.PI;
-      });
-    } else {
-      ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI);
-      ctx.fillStyle = '#DDD9CE'; ctx.fill();
-    }
-
-    // donut hole
-    ctx.beginPath(); ctx.arc(cx, cy, Ri, 0, 2 * Math.PI);
-    ctx.fillStyle = '#F8F4EC'; ctx.fill();
-
-    // centre text
-    ctx.textAlign = 'center';
-    if (centerLabel && total > 0) {
-      const pct = Math.round(segments[0].value / total * 100);
-      ctx.fillStyle = '#7B7060';
-      ctx.font = 'bold 8px Segoe UI, Arial, sans-serif';
-      ctx.fillText(centerLabel.toUpperCase(), cx, cy - 5);
-      ctx.fillStyle = '#2C2214';
-      ctx.font = 'bold 17px Segoe UI, Arial, sans-serif';
-      ctx.fillText(pct + '%', cx, cy + 13);
-    }
-
-    // legend (up to 2 rows of 3)
-    let lx = 8, ly = SZ + 14;
-    segments.forEach((g, i) => {
-      if (i > 0 && i % 3 === 0) { lx = 8; ly += 22; }
-      ctx.fillStyle = g.color;
-      ctx.fillRect(lx, ly, 8, 8);
-      ctx.fillStyle = '#7B7060';
-      ctx.font = '9px Segoe UI, Arial, sans-serif';
-      ctx.textAlign = 'left';
-      const pStr = total > 0 ? ' ' + Math.round(g.value / total * 100) + '%' : '';
-      ctx.fillText(g.label + pStr, lx + 11, ly + 8);
-      lx += SZ / 3;
-    });
-
-    return canvas.toDataURL('image/png').split(',')[1];
-  }
-
   // ── WORKBOOK ─────────────────────────────────────────────────────────────
   const wb = new ExcelJS.Workbook();
   wb.creator = 'UK Salary Calculator';
@@ -2421,10 +2342,8 @@ async function exportToExcel(inputs, result, ccResult, budget) {
   ws1.columns = [
     { width: 32 }, // A label
     { width: 16 }, // B annual / taxable
-    { width: 11 }, // C monthly / rate
+    { width: 11 }, // C rate
     { width: 16 }, // D monthly / tax paid
-    { width: 2  }, // E spacer
-    { width: 13 }, { width: 13 }, { width: 13 }, { width: 13 }, { width: 13 }, // F-J chart
   ];
 
   // Title
@@ -2483,13 +2402,15 @@ async function exportToExcel(inputs, result, ccResult, budget) {
     const bg = r.type === 'takehome' ? C.accentLt : alt % 2 === 0 ? C.surface : C.white;
     alt++;
     sc(ws1.getCell(rn, 1), { value: r.label, font: r.type === 'takehome' ? F.accent : r.type === 'gross' ? F.bold : F.normal, fill: bg, align: al('left', 'middle', 1) });
-    [2, 4].forEach((col, i) => {
-      const val = i === 0 ? r.ann : r.ann / 12;
-      sc(ws1.getCell(rn, col), {
-        value: val,
-        font: r.type === 'takehome' ? F.accent : r.type === 'ded' ? F.red : F.bold,
-        fill: bg, numFmt: currFmt, align: al('right', 'middle'),
-      });
+    sc(ws1.getCell(rn, 2), {
+      value: r.ann,
+      font: r.type === 'takehome' ? F.accent : r.type === 'ded' ? F.red : F.bold,
+      fill: bg, numFmt: currFmt, align: al('right', 'middle'),
+    });
+    sc(ws1.getCell(rn, 4), {
+      value: { formula: `B${rn}/12` },
+      font: r.type === 'takehome' ? F.accent : r.type === 'ded' ? F.red : F.bold,
+      fill: bg, numFmt: currFmt, align: al('right', 'middle'),
     });
     rn++;
   });
@@ -2510,28 +2431,17 @@ async function exportToExcel(inputs, result, ccResult, budget) {
     sc(ws1.getCell(rn, 1), { value: b.name,    font: F.normal, fill: bg, align: al('left',  'middle', 1) });
     sc(ws1.getCell(rn, 2), { value: b.taxable, font: F.normal, fill: bg, numFmt: currFmt, align: al('right', 'middle') });
     sc(ws1.getCell(rn, 3), { value: b.rate,    font: F.normal, fill: bg, numFmt: pctFmt,  align: al('right', 'middle') });
-    sc(ws1.getCell(rn, 4), { value: b.amount,  font: F.normal, fill: bg, numFmt: currFmt, align: al('right', 'middle') });
+    sc(ws1.getCell(rn, 4), { value: { formula: `B${rn}*C${rn}` }, font: F.normal, fill: bg, numFmt: currFmt, align: al('right', 'middle') });
     rn++;
   });
 
-  // Salary donut chart
-  const salSegs = [
-    { label: 'Take Home',      value: Math.max(0, result.finalTakeHome), color: C.c3 },
-    { label: 'Income Tax',     value: result.incomeTax,                  color: C.c1 },
-    { label: 'Nat. Insurance', value: result.niAmount,                   color: C.c2 },
-    ...(result.slAmount > 0 ? [{ label: 'Student Loan', value: result.slAmount, color: C.c4 }] : []),
-    ...(totalPension > 0    ? [{ label: 'Pension',      value: totalPension,    color: C.c5 }] : []),
-  ].filter(s => s.value > 0);
-  wb.addImage({ base64: renderDonut(salSegs, 'Take Home'), extension: 'png' });
-  ws1.addImage(wb.model.media.length - 1, { tl: { col: 5, row: 0 }, ext: { width: 260, height: 330 } });
 
   // ═════════════════════════════════════════════════════════════════════════
   // SHEET 2 — CHILDCARE PLANNER
   // ═════════════════════════════════════════════════════════════════════════
   const ws2 = wb.addWorksheet('Childcare Planner');
   ws2.columns = [
-    { width: 32 }, { width: 18 }, { width: 18 }, { width: 2 },
-    { width: 13 }, { width: 13 }, { width: 13 }, { width: 13 }, { width: 13 },
+    { width: 32 }, { width: 18 }, { width: 18 },
   ];
 
   ws2.mergeCells('A1:C1'); ws2.getRow(1).height = 36;
@@ -2586,22 +2496,13 @@ async function exportToExcel(inputs, result, ccResult, budget) {
     });
   }
 
-  // Childcare donut chart
-  const ccSegs = [
-    { label: 'Current Cash',  value: Math.max(0, ccResult.currentLiquidity),          color: C.c3 },
-    { label: 'Nursery Bill',  value: Math.max(0, ccResult.currentTotalChildcareCost),  color: C.c1 },
-    ...(!ccResult.eligible ? [{ label: 'Optimised Cash', value: Math.max(0, ccResult.optimisedLiquidity), color: C.c2 }] : []),
-  ].filter(s => s.value > 0);
-  wb.addImage({ base64: renderDonut(ccSegs, 'Cash'), extension: 'png' });
-  ws2.addImage(wb.model.media.length - 1, { tl: { col: 4, row: 0 }, ext: { width: 260, height: 330 } });
 
   // ═════════════════════════════════════════════════════════════════════════
   // SHEET 3 — BUDGET PLANNER
   // ═════════════════════════════════════════════════════════════════════════
   const ws3 = wb.addWorksheet('Budget Planner');
   ws3.columns = [
-    { width: 32 }, { width: 18 }, { width: 2 },
-    { width: 13 }, { width: 13 }, { width: 13 }, { width: 13 }, { width: 13 },
+    { width: 32 }, { width: 18 },
   ];
 
   ws3.mergeCells('A1:B1'); ws3.getRow(1).height = 36;
@@ -2629,7 +2530,8 @@ async function exportToExcel(inputs, result, ccResult, budget) {
     { label: 'Savings & Investments', val: budget.financial },
   ];
 
-  let br = 7, balt = 0;
+  const budgetCatStart = 7;
+  let br = budgetCatStart, balt = 0;
   budgetCats.forEach(b => {
     ws3.getRow(br).height = 22;
     const bg = balt % 2 === 0 ? C.surface : C.white;
@@ -2637,6 +2539,7 @@ async function exportToExcel(inputs, result, ccResult, budget) {
     sc(ws3.getCell(br, 2), { value: b.val,   font: F.normal, fill: bg, numFmt: currFmt, align: al('right', 'middle') });
     br++; balt++;
   });
+  const budgetCatEnd = br - 1;
 
   if (budget.carsCount > 0) {
     ws3.getRow(br).height = 8; br++;
@@ -2654,29 +2557,17 @@ async function exportToExcel(inputs, result, ccResult, budget) {
 
   ws3.getRow(br).height = 8; br++;
   ws3.getRow(br).height = 24;
+  const totalOutRow = br;
   sc(ws3.getCell(br, 1), { value: 'Total Outgoings',  font: F.bold, fill: C.surf2, align: al('left',  'middle', 1) });
-  sc(ws3.getCell(br, 2), { value: budget.totalExpenses, font: F.bold, fill: C.surf2, numFmt: currFmt, align: al('right', 'middle') });
+  sc(ws3.getCell(br, 2), { value: { formula: `SUM(B${budgetCatStart}:B${budgetCatEnd})` }, font: F.bold, fill: C.surf2, numFmt: currFmt, align: al('right', 'middle') });
   br++;
 
   ws3.getRow(br).height = 30;
   const remPos  = budget.remaining >= 0;
   const remFont = { name: 'Segoe UI', size: 12, bold: true, color: { argb: remPos ? C.green : C.red } };
   sc(ws3.getCell(br, 1), { value: 'Remaining Balance',  font: remFont, fill: remPos ? C.greenLt : C.redLt, align: al('left',  'middle', 1) });
-  sc(ws3.getCell(br, 2), { value: budget.remaining,     font: remFont, fill: remPos ? C.greenLt : C.redLt, numFmt: currFmt, align: al('right', 'middle') });
+  sc(ws3.getCell(br, 2), { value: { formula: `B4-B${totalOutRow}` }, font: remFont, fill: remPos ? C.greenLt : C.redLt, numFmt: currFmt, align: al('right', 'middle') });
 
-  // Budget donut chart
-  const budgetSegs = [
-    { label: 'Housing',   value: budget.housing,                     color: C.c1 },
-    { label: 'Utilities', value: budget.utilities,                   color: C.c2 },
-    { label: 'Transport', value: budget.transport,                   color: C.c3 },
-    { label: 'Lifestyle', value: budget.lifestyle,                   color: C.c4 },
-    { label: 'Savings',   value: budget.financial,                   color: C.c5 },
-    { label: 'Leftover',  value: Math.max(0, budget.remaining),      color: '#A8A8A0' },
-  ].filter(s => s.value > 0);
-  if (budgetSegs.length > 0) {
-    wb.addImage({ base64: renderDonut(budgetSegs, 'Budget'), extension: 'png' });
-    ws3.addImage(wb.model.media.length - 1, { tl: { col: 3, row: 0 }, ext: { width: 260, height: 330 } });
-  }
 
   // ── Save ──────────────────────────────────────────────────────────────────
   const buffer = await wb.xlsx.writeBuffer();
