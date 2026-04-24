@@ -1,0 +1,2833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UK Take Home Salary Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        oklch(95% 0.018 82);
+      --bg2:       oklch(92% 0.022 82);
+      --surface:   oklch(98.5% 0.010 82);
+      --surface2:  oklch(96% 0.018 82);
+      --border:    oklch(86% 0.025 82);
+      --text:      oklch(20% 0.030 60);
+      --muted:     oklch(50% 0.025 70);
+      --accent:    oklch(56% 0.140 55);
+      --accent2:   oklch(68% 0.100 55);
+      --accent-bg: oklch(95% 0.040 70);
+      --green:     oklch(52% 0.12 150);
+      --green-bg:  oklch(94% 0.025 150);
+      --red:       oklch(50% 0.13 20);
+      --info-bg:   oklch(94% 0.020 220);
+      --info-text: oklch(38% 0.060 220);
+      --info-border: oklch(84% 0.030 220);
+      --c1: oklch(56% 0.14 55);
+      --c2: oklch(65% 0.12 200);
+      --c3: oklch(72% 0.10 150);
+      --c4: oklch(80% 0.08 80);
+      --c5: oklch(65% 0.09 280);
+      --radius: 14px;
+      --transition: 0.3s cubic-bezier(.4,0,.2,1);
+    }
+
+    [data-theme="dark"] {
+      --bg:        oklch(13% 0.040 158);
+      --bg2:       oklch(10% 0.030 158);
+      --surface:   oklch(18% 0.048 158);
+      --surface2:  oklch(22% 0.050 158);
+      --border:    oklch(28% 0.045 158);
+      --text:      oklch(96% 0.012 82);
+      --muted:     oklch(78% 0.018 80);
+      --accent:    oklch(75% 0.110 70);
+      --accent2:   oklch(83% 0.085 70);
+      --accent-bg: oklch(22% 0.060 100);
+      --green:     oklch(74% 0.14 150);
+      --green-bg:  oklch(20% 0.040 150);
+      --red:       oklch(72% 0.12 20);
+      --info-bg:   oklch(20% 0.035 220);
+      --info-text: oklch(76% 0.060 220);
+      --info-border: oklch(34% 0.040 220);
+      --c1: oklch(72% 0.12 70);
+      --c2: oklch(68% 0.11 200);
+      --c3: oklch(75% 0.10 150);
+      --c4: oklch(82% 0.07 80);
+      --c5: oklch(72% 0.09 280);
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; transition: background var(--transition), color var(--transition); -webkit-font-smoothing: antialiased; }
+    #root { height: 100%; }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 99px; background: var(--border); outline: none; cursor: pointer; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); border: 3px solid var(--surface); box-shadow: 0 1px 4px rgba(0,0,0,.2); transition: transform .15s; }
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+    select { -webkit-appearance: none; background: var(--surface2); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 10px 36px 10px 12px; cursor: pointer; width: 100%; transition: border-color .2s, box-shadow .2s; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+    select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 20%, transparent); }
+
+    input[type=text], input[type=number] { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 10px 12px; width: 100%; transition: border-color .2s, box-shadow .2s; }
+    input[type=text]:focus, input[type=number]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 18%, transparent); }
+    input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .app-root { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    .app-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 28px; border-bottom: 1.5px solid var(--border); background: var(--bg2); flex-shrink: 0; }
+    .header-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+    .mag-grid   { display: grid; grid-template-columns: 400px 1fr; flex: 1; min-height: 0; overflow: hidden; }
+    .mag-grid-3 { display: grid; grid-template-columns: 360px 360px 1fr; flex: 1; min-height: 0; overflow: hidden; }
+    .mag-left  { overflow-y: auto; padding: 28px 36px; background: var(--bg); }
+    .mag-right { overflow-y: auto; padding: 28px 24px; border-left: 1.5px solid var(--border); background: var(--surface); }
+
+    @media (max-width: 768px) {
+      html, body, #root { height: auto; }
+      .app-root  { height: auto; overflow: visible; }
+      .app-header { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+      .app-header .header-tags { display: none; }
+      .mag-grid, .mag-grid-3 { grid-template-columns: 1fr !important; height: auto; overflow: visible; }
+      .mag-left  { overflow-y: visible; padding: 20px 16px; order: 1; border-right: none !important; }
+      .mag-right { overflow-y: visible; padding: 20px 16px; border-left: none; border-top: 1.5px solid var(--border); order: 2; }
+      
+      /* Ensure comparison columns stack correctly */
+      .comparison-col-1 { order: 1; border-right: none !important; border-bottom: 1.5px solid var(--border); }
+      .comparison-col-2 { order: 2; border-right: none !important; border-bottom: 1.5px solid var(--border); }
+      .comparison-col-3 { order: 3; border-top: none !important; }
+      
+      .mag-grid-3 { display: flex; flex-direction: column; }
+    }
+
+    @media (min-width: 769px) and (max-width: 1100px) {
+      .mag-grid { grid-template-columns: 360px 1fr; }
+      .mag-left  { padding: 20px 24px; }
+      .mag-right { padding: 20px 16px; }
+    }
+
+    .tab-bar { display:flex; gap:4px; padding:0 28px; border-bottom:1.5px solid var(--border); background:var(--bg2); flex-shrink:0; }
+    .tab-btn { padding:10px 18px; font-size:12px; font-weight:600; font-family:'DM Sans',sans-serif; border:none; border-bottom:2.5px solid transparent; background:transparent; cursor:pointer; color:var(--muted); transition:color .2s,border-color .2s; position:relative; letter-spacing:0.02em; }
+    .tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+    .tab-badge { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--red); position:absolute; top:8px; right:4px; }
+    @media (max-width:768px) { .tab-bar { padding:0 16px; } }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useMemo } = React;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TAX DATA
+// ═══════════════════════════════════════════════════════════════════════════════
+const TAX_YEARS = {
+  "2026/27": {
+    pa: 12570,
+    bands: [
+      { name: "Basic Rate",      rate: 0.20, from: 12570, to: 50270 },
+      { name: "Higher Rate",     rate: 0.40, from: 50270, to: 125140 },
+      { name: "Additional Rate", rate: 0.45, from: 125140, to: Infinity },
+    ],
+    scottish: [
+      { name: "Starter Rate",      rate: 0.19, from: 12570, to: 14876 },
+      { name: "Basic Rate",        rate: 0.20, from: 14876, to: 26561 },
+      { name: "Intermediate Rate", rate: 0.21, from: 26561, to: 43662 },
+      { name: "Higher Rate",       rate: 0.42, from: 43662, to: 75000 },
+      { name: "Advanced Rate",     rate: 0.45, from: 75000, to: 125140 },
+      { name: "Top Rate",          rate: 0.48, from: 125140, to: Infinity },
+    ],
+    ni: { lower: 12570, upper: 50270, rate1: 0.08, rate2: 0.02 },
+    studentLoan: {
+      "Plan 1": { threshold: 26900, rate: 0.09 },
+      "Plan 2": { threshold: 29385, rate: 0.09 },
+      "Plan 4": { threshold: 33795, rate: 0.09 },
+      "Plan 5": { threshold: 25000, rate: 0.09 },
+      "Postgrad": { threshold: 21000, rate: 0.06 },
+    },
+    evBikPct: 0.04,
+    erNiRate: 0.15,
+    annualAllowance: 60000,
+    minTaperedAllowance: 10000,
+  },
+  "2025/26": {
+    pa: 12570,
+    bands: [
+      { name: "Basic Rate",      rate: 0.20, from: 12570, to: 50270 },
+      { name: "Higher Rate",     rate: 0.40, from: 50270, to: 125140 },
+      { name: "Additional Rate", rate: 0.45, from: 125140, to: Infinity },
+    ],
+    scottish: [
+      { name: "Starter Rate",      rate: 0.19, from: 12570, to: 14876 },
+      { name: "Basic Rate",        rate: 0.20, from: 14876, to: 26561 },
+      { name: "Intermediate Rate", rate: 0.21, from: 26561, to: 43662 },
+      { name: "Higher Rate",       rate: 0.42, from: 43662, to: 75000 },
+      { name: "Advanced Rate",     rate: 0.45, from: 75000, to: 125140 },
+      { name: "Top Rate",          rate: 0.48, from: 125140, to: Infinity },
+    ],
+    ni: { lower: 12570, upper: 50270, rate1: 0.08, rate2: 0.02 },
+    studentLoan: {
+      "Plan 1": { threshold: 26065, rate: 0.09 },
+      "Plan 2": { threshold: 28470, rate: 0.09 },
+      "Plan 4": { threshold: 32745, rate: 0.09 },
+      "Plan 5": { threshold: 25000, rate: 0.09 },
+      "Postgrad": { threshold: 21000, rate: 0.06 },
+    },
+    evBikPct: 0.03,
+    erNiRate: 0.15,
+    annualAllowance: 60000,
+    minTaperedAllowance: 10000,
+  },
+  "2024/25": {
+    pa: 12570,
+    bands: [
+      { name: "Basic Rate",      rate: 0.20, from: 12570, to: 50270 },
+      { name: "Higher Rate",     rate: 0.40, from: 50270, to: 125140 },
+      { name: "Additional Rate", rate: 0.45, from: 125140, to: Infinity },
+    ],
+    scottish: [
+      { name: "Starter Rate",      rate: 0.19, from: 12570, to: 14876 },
+      { name: "Basic Rate",        rate: 0.20, from: 14876, to: 26561 },
+      { name: "Intermediate Rate", rate: 0.21, from: 26561, to: 43662 },
+      { name: "Higher Rate",       rate: 0.42, from: 43662, to: 75000 },
+      { name: "Advanced Rate",     rate: 0.45, from: 75000, to: 125140 },
+      { name: "Top Rate",          rate: 0.48, from: 125140, to: Infinity },
+    ],
+    ni: { lower: 12570, upper: 50270, rate1: 0.08, rate2: 0.02 },
+    studentLoan: {
+      "Plan 1": { threshold: 22015, rate: 0.09 },
+      "Plan 2": { threshold: 27295, rate: 0.09 },
+      "Plan 4": { threshold: 27660, rate: 0.09 },
+      "Plan 5": { threshold: 25000, rate: 0.09 },
+      "Postgrad": { threshold: 21000, rate: 0.06 },
+    },
+    evBikPct: 0.02,
+    erNiRate: 0.138,
+    annualAllowance: 60000,
+    minTaperedAllowance: 10000,
+  },
+  "2023/24": {
+    pa: 12570,
+    bands: [
+      { name: "Basic Rate",      rate: 0.20, from: 12570, to: 50270 },
+      { name: "Higher Rate",     rate: 0.40, from: 50270, to: 125140 },
+      { name: "Additional Rate", rate: 0.45, from: 125140, to: Infinity },
+    ],
+    scottish: [
+      { name: "Starter Rate",      rate: 0.19, from: 12570, to: 14732 },
+      { name: "Basic Rate",        rate: 0.20, from: 14732, to: 25688 },
+      { name: "Intermediate Rate", rate: 0.21, from: 25688, to: 43662 },
+      { name: "Higher Rate",       rate: 0.42, from: 43662, to: 75000 },
+      { name: "Top Rate",          rate: 0.47, from: 75000, to: Infinity },
+    ],
+    ni: { lower: 12570, upper: 50270, rate1: 0.12, rate2: 0.02 },
+    studentLoan: {
+      "Plan 1": { threshold: 22015, rate: 0.09 },
+      "Plan 2": { threshold: 27295, rate: 0.09 },
+      "Plan 4": { threshold: 27660, rate: 0.09 },
+      "Plan 5": { threshold: 25000, rate: 0.09 },
+      "Postgrad": { threshold: 21000, rate: 0.06 },
+    },
+    evBikPct: 0.02,
+    erNiRate: 0.138,
+    annualAllowance: 60000,
+    minTaperedAllowance: 10000,
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CALCULATION ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+function parseTaxCode(code, defaultPA) {
+  const c = (code || '').trim().toUpperCase().replace(/\s/g, '');
+  if (!c || c === '1257L') return { pa: defaultPA, specialRate: null };
+  if (c === 'BR')  return { pa: 0, specialRate: 0.20 };
+  if (c === 'D0')  return { pa: 0, specialRate: 0.40 };
+  if (c === 'D1')  return { pa: 0, specialRate: 0.45 };
+  if (c === 'NT')  return { pa: 0, specialRate: 0 };
+  if (c === '0T')  return { pa: 0, specialRate: null };
+  const kMatch = c.match(/^K(\d+)/);
+  if (kMatch) return { pa: -(parseInt(kMatch[1]) * 10), specialRate: null };
+  const numMatch = c.match(/^(\d+)/);
+  if (numMatch) return { pa: parseInt(numMatch[1]) * 10, specialRate: null };
+  return { pa: defaultPA, specialRate: null };
+}
+
+function explainTaxCode(code, defaultPA) {
+  const c = (code || '').trim().toUpperCase().replace(/\s/g, '');
+  if (!c) return { text: 'Enter your tax code from your most recent payslip, P60, or HMRC letter. If unsure, 1257L is the standard code for most UK employees.', type: 'neutral' };
+  if (c === '1257L') return { text: 'Standard tax code. You have a Personal Allowance of £12,570 — the amount you can earn each year before paying Income Tax. The "L" suffix means you\'re entitled to the standard Personal Allowance.', type: 'good' };
+  if (c === 'BR') return { text: 'Basic Rate — all income from this source is taxed at 20% with no Personal Allowance applied. This is commonly used for a second job, a pension, or when HMRC needs more information about your circumstances.', type: 'warn' };
+  if (c === 'D0') return { text: 'Higher Rate — all income taxed at 40% with no Personal Allowance. Typically used for a second job where you have already used your Personal Allowance elsewhere.', type: 'warn' };
+  if (c === 'D1') return { text: 'Additional Rate — all income taxed at 45% with no Personal Allowance applied. Used for income subject to the additional rate tax.', type: 'warn' };
+  if (c === 'NT') return { text: 'No Tax — no Income Tax is deducted from this income source. Used in specific circumstances agreed with HMRC (e.g. overseas workers, crown employees).', type: 'good' };
+  if (c === '0T') return { text: 'Zero allowance — no Personal Allowance applied, so all income is taxed from £0. Often used when starting a new job without a P45, or when HMRC does not have enough information. You may be owed a refund once your correct code is applied.', type: 'warn' };
+  const kMatch = c.match(/^K(\d+)/);
+  if (kMatch) {
+    const adj = parseInt(kMatch[1]) * 10;
+    return { text: `K code — your deductions (e.g. company benefits or unpaid tax) of £${adj.toLocaleString()} exceed your allowances. This amount is added to your taxable income rather than deducted. Your employer collects additional tax each pay period to cover this. Contact HMRC on 0300 200 3300 if you believe this is incorrect.`, type: 'warn' };
+  }
+  const emergency = c.endsWith('W1') || c.endsWith('M1') || c.endsWith('X');
+  const numMatch = c.match(/^(\d+)([A-Z]+)?/);
+  if (numMatch) {
+    const pa = parseInt(numMatch[1]) * 10;
+    const rawSuffix = (numMatch[2] || '');
+    const suffix = rawSuffix.replace('W1','').replace('M1','').replace('X','');
+    let suffixNote = '';
+    if (suffix === 'M') suffixNote = ' You have received 10% of your partner\'s Personal Allowance through Marriage Allowance (+£1,260).';
+    if (suffix === 'N') suffixNote = ' You have transferred 10% of your Personal Allowance to your partner through Marriage Allowance (−£1,260).';
+    if (suffix === 'T') suffixNote = ' Your tax code requires individual calculation — HMRC may need to review your circumstances, such as adjustments for benefits or allowances.';
+    if (suffix === 'S') suffixNote = ' Scottish taxpayer — Scottish Income Tax rates and bands apply to your non-savings, non-dividend income.';
+    if (suffix === 'C') suffixNote = ' Welsh taxpayer — Welsh rates apply (currently the same as England/NI rates).';
+    let diff = '';
+    if (pa < defaultPA) diff = ` This is reduced from the standard £${defaultPA.toLocaleString()}, likely because of taxable company benefits, unpaid tax from a previous year, or income over £100,000 (where the Personal Allowance is tapered away).`;
+    if (pa > defaultPA) diff = ` This is higher than the standard £${defaultPA.toLocaleString()}, possibly due to allowable work expenses, job-related costs, or Marriage Allowance received from your partner.`;
+    const emergNote = emergency ? ' ⚠ This is an emergency / non-cumulative code (Month 1 or Week 1 basis) — tax is recalculated each pay period from scratch, ignoring what has been deducted so far. This often means too much tax is temporarily deducted. Update your employer once your correct code is received.' : '';
+    const typeVal = emergency ? 'warn' : pa === defaultPA ? 'good' : 'info';
+    return { text: `Personal Allowance of £${pa.toLocaleString()} — you can earn up to this amount before paying Income Tax this year.${diff}${suffixNote}${emergNote}`, type: typeVal };
+  }
+  return { text: 'Unrecognised tax code. Double-check your payslip or P60, or contact HMRC on 0300 200 3300 to confirm.', type: 'warn' };
+}
+
+function calcIncomeTax(income, taxCodeStr, yearData, isScottish) {
+  const { pa: defaultPA, bands, scottish } = yearData;
+  const { pa: codedPA, specialRate } = parseTaxCode(taxCodeStr, defaultPA);
+  let effectivePA = codedPA;
+  if (specialRate === null && income > 100000) {
+    const reduction = Math.min(Math.max(0, codedPA), Math.floor((income - 100000) / 2));
+    effectivePA = codedPA - reduction;
+  }
+  const paShift = defaultPA - effectivePA;
+  const chosenBands = isScottish ? scottish : bands;
+  let incomeTax = 0;
+  const bandBreakdown = [];
+
+  if (specialRate !== null) {
+    incomeTax = income * specialRate;
+    if (income > 0) bandBreakdown.push({ name: `${(specialRate*100).toFixed(0)}% Flat Rate`, taxable: income, rate: specialRate, amount: incomeTax });
+    return { incomeTax, bandBreakdown, effectivePA };
+  }
+
+  for (const band of chosenBands) {
+    const adjFrom = Math.max(0, band.from - paShift);
+    const adjTo = band.to === Infinity ? Infinity : Math.max(0, band.to - paShift);
+    if (income <= adjFrom) continue;
+    const taxable = Math.min(income, adjTo === Infinity ? income : adjTo) - adjFrom;
+    if (taxable <= 0) continue;
+    const tax = taxable * band.rate;
+    incomeTax += tax;
+    bandBreakdown.push({ name: band.name, taxable, rate: band.rate, amount: tax });
+  }
+  return { incomeTax, bandBreakdown, effectivePA };
+}
+
+function calcNI(earnings, niData) {
+  if (earnings <= niData.lower) return 0;
+  if (earnings <= niData.upper) return (earnings - niData.lower) * niData.rate1;
+  return (niData.upper - niData.lower) * niData.rate1 + (earnings - niData.upper) * niData.rate2;
+}
+
+function calcStudentLoan(gross, plan, yearData) {
+  if (plan === 'None' || !yearData.studentLoan[plan]) return 0;
+  const { threshold, rate } = yearData.studentLoan[plan];
+  return gross > threshold ? (gross - threshold) * rate : 0;
+}
+
+function getMarginalRate(income, effectivePA, bands, niData, specialRate) {
+  if (specialRate !== null) return specialRate + (income > niData.lower ? niData.rate1 : 0);
+  if (income > 100000 && income < 125140) return 0.60 + niData.rate2;
+  let taxRate = 0;
+  for (const b of bands) {
+    if (income > b.from && income <= (b.to === Infinity ? income + 1 : b.to)) { taxRate = b.rate; break; }
+  }
+  let niRate = 0;
+  if (income > niData.lower && income <= niData.upper) niRate = niData.rate1;
+  else if (income > niData.upper) niRate = niData.rate2;
+  return taxRate + niRate;
+}
+
+function calcAll(inputs, yearData) {
+  const { salary, bonus, bonusEnabled, taxCode, region,
+    pensionEmpPct, pensionEmpFixed, pensionEmpUseFixed, pensionEmpMethod,
+    pensionErPct, pensionErFixed, pensionErUseFixed,
+    pensionErPassNiSaving, pensionIncludeBonus,
+    evEnabled, evMonthly, evP11d, evIsEV, evManualBikPct,
+    otherSacEnabled, otherSacMonthly,
+    benMedical, benDental, benOther, studentLoan,
+    otherIncomeEnabled, otherIncomeRental, otherIncomeSavings, otherIncomeDividends, otherIncomeOther,
+    allowancesEnabled, allowancesFreq, allowanceCar, allowanceOnCall, allowanceOther,
+    netDeductions, netAdditions } = inputs;
+
+  const isScottish = region === 'scotland';
+  const sal = Math.max(0, Number(salary) || 0);
+  const bon = bonusEnabled ? Math.max(0, Number(bonus) || 0) : 0;
+
+  const pensionBase = pensionIncludeBonus ? sal + bon : sal;
+  const pensionEmpAnnual = pensionEmpUseFixed
+    ? Math.max(0, Number(pensionEmpFixed) || 0)
+    : Math.max(0, pensionBase * ((Number(pensionEmpPct) || 0) / 100));
+
+  const evSacAnnual    = evEnabled       ? Math.max(0, (Number(evMonthly)       || 0) * 12) : 0;
+  const otherSacAnnual = otherSacEnabled ? Math.max(0, (Number(otherSacMonthly) || 0) * 12) : 0;
+  const pensionSacAnnual = pensionEmpMethod === 'sacrifice' ? pensionEmpAnnual : 0;
+  const totalSacrifice   = pensionSacAnnual + evSacAnnual + otherSacAnnual;
+  const grossAfterSac    = Math.max(0, sal - totalSacrifice);
+
+  const bikPct     = evEnabled ? (evIsEV ? (yearData.evBikPct || 0.03) : (Number(evManualBikPct) || 0) / 100) : 0;
+  const evBikValue = evEnabled ? Math.max(0, (Number(evP11d) || 0) * bikPct) : 0;
+  const p11dBenefits  = ((Number(benMedical)||0) + (Number(benDental)||0) + (Number(benOther)||0)) * 12;
+  const totalBenefits = p11dBenefits + evBikValue;
+  const allowMult = allowancesFreq === 'monthly' ? 12 : 1;
+  const totalAllowances = allowancesEnabled
+    ? Math.max(0, ((Number(allowanceCar)||0) + (Number(allowanceOnCall)||0) + (Number(allowanceOther)||0)) * allowMult)
+    : 0;
+  const otherIncomeAnnual = otherIncomeEnabled
+    ? Math.max(0, (Number(otherIncomeRental)||0) + (Number(otherIncomeSavings)||0) + (Number(otherIncomeDividends)||0) + (Number(otherIncomeOther)||0))
+    : 0;
+  const niableIncome  = grossAfterSac + totalAllowances;
+  const taxableIncome = niableIncome + totalBenefits + otherIncomeAnnual;
+
+  const { incomeTax, bandBreakdown, effectivePA } = calcIncomeTax(taxableIncome, taxCode, yearData, isScottish);
+  const { incomeTax: itBonus } = calcIncomeTax(taxableIncome + bon, taxCode, yearData, isScottish);
+  const taxOnBonus = itBonus - incomeTax;
+
+  const niAmount = calcNI(niableIncome, yearData.ni);
+  const niBonus  = calcNI(niableIncome + bon, yearData.ni) - niAmount;
+  const slAmount = calcStudentLoan(niableIncome, studentLoan, yearData);
+  const slBonus  = calcStudentLoan(niableIncome + bon, studentLoan, yearData) - slAmount;
+
+  const pensionReliefAmount = pensionEmpMethod === 'relief' ? pensionEmpAnnual : 0;
+  const pensionReliefNet = pensionReliefAmount * 0.8;
+  const pensionErAnnual = pensionErUseFixed
+    ? Math.max(0, Number(pensionErFixed) || 0)
+    : Math.max(0, sal * ((Number(pensionErPct) || 0) / 100));
+  const pensionErNiSaving = pensionErPassNiSaving ? pensionSacAnnual * (yearData.erNiRate||0.138) : 0;
+  const pensionErEffective = pensionErAnnual + pensionErNiSaving;
+
+  // Pension Annual Allowance taper (HMRC rules)
+  const annualAllowance = yearData.annualAllowance || 60000;
+  const minTaperedAA    = yearData.minTaperedAllowance || 10000;
+  // Threshold income: sacrifice already reduced taxableIncome; only deduct RAS contributions
+  const pensionEmpRAS   = pensionEmpMethod === 'relief' ? pensionEmpAnnual : 0;
+  const thresholdIncome = taxableIncome + bon - pensionEmpRAS;
+  // Adjusted income: add back sacrifice (excluded from taxableIncome) + employer contributions
+  const adjustedIncome  = thresholdIncome + pensionSacAnnual + pensionErAnnual;
+  let effectiveAA = annualAllowance;
+  if (adjustedIncome > 260000 && thresholdIncome > 200000) {
+    effectiveAA = Math.max(minTaperedAA, annualAllowance - Math.floor((adjustedIncome - 260000) / 2));
+  }
+  const totalPensionInput = pensionEmpAnnual + pensionErAnnual;
+  const aaExcess = Math.max(0, totalPensionInput - effectiveAA);
+  // ANI used for PA taper, Child Benefit, childcare threshold
+  const ani = taxableIncome + bon - pensionReliefAmount;
+
+  const netAdjDeductions = (netDeductions||[]).reduce((s,d) => s + Math.max(0,(Number(d.amount)||0)*12), 0);
+  const netAdjAdditions  = (netAdditions||[]).reduce((s,a)  => s + Math.max(0,(Number(a.amount)||0)*12), 0);
+  const netAdjTotal      = netAdjAdditions - netAdjDeductions;
+  const takeHome         = sal - totalSacrifice - incomeTax - niAmount - slAmount - pensionReliefNet + otherIncomeAnnual + totalAllowances;
+  const takeHomeBonus    = takeHome + bon - taxOnBonus - niBonus - slBonus;
+  const finalTakeHome    = takeHome + netAdjTotal;
+  const finalTakeHomeBonus = takeHomeBonus + netAdjTotal;
+  const effectiveRate = sal > 0 ? (incomeTax + niAmount) / sal : 0;
+  const marginalRate  = getMarginalRate(
+    taxableIncome, effectivePA,
+    isScottish ? yearData.scottish : yearData.bands,
+    yearData.ni, parseTaxCode(taxCode, yearData.pa).specialRate
+  );
+
+  const evNiSaving  = calcNI(niableIncome + evSacAnnual, yearData.ni) - niAmount;
+  const evTaxSaving = evSacAnnual * marginalRate;
+  const evBikTax    = evBikValue * marginalRate;
+  const evNetCost   = evSacAnnual - evTaxSaving - evNiSaving + evBikTax;
+
+  const r2 = n => Math.round((n||0)*100)/100;
+  return {
+    sal, bon, totalSacrifice:r2(totalSacrifice), pensionSacAnnual:r2(pensionSacAnnual), evSacAnnual:r2(evSacAnnual), otherSacAnnual:r2(otherSacAnnual),
+    grossAfterSac:r2(grossAfterSac), totalAllowances:r2(totalAllowances), bikPct, evBikValue:r2(evBikValue), p11dBenefits:r2(p11dBenefits), totalBenefits:r2(totalBenefits),
+    taxableIncome:r2(taxableIncome), incomeTax:r2(incomeTax), bandBreakdown, effectivePA:r2(effectivePA),
+    taxOnBonus:r2(taxOnBonus), niAmount:r2(niAmount), niBonus:r2(niBonus), slAmount:r2(slAmount), slBonus:r2(slBonus),
+    pensionEmpAnnual:r2(pensionEmpAnnual), pensionEmpMethod, pensionReliefAmount:r2(pensionReliefAmount), pensionReliefNet:r2(pensionReliefNet), pensionErAnnual:r2(pensionErAnnual),
+    pensionErNiSaving:r2(pensionErNiSaving), pensionErEffective:r2(pensionErEffective),
+    otherIncomeAnnual:r2(otherIncomeAnnual),
+    netAdjDeductions:r2(netAdjDeductions), netAdjAdditions:r2(netAdjAdditions), netAdjTotal:r2(netAdjTotal),
+    takeHome:r2(takeHome), takeHomeBonus:r2(takeHomeBonus), finalTakeHome:r2(finalTakeHome), finalTakeHomeBonus:r2(finalTakeHomeBonus),
+    effectiveRate, marginalRate,
+    evTaxSaving:r2(evTaxSaving), evNiSaving:r2(evNiSaving), evBikTax:r2(evBikTax), evNetCost:r2(evNetCost), yearData,
+    ani:r2(ani), adjustedIncome:r2(adjustedIncome), thresholdIncome:r2(thresholdIncome), effectiveAA:r2(effectiveAA), annualAllowance:r2(annualAllowance), totalPensionInput:r2(totalPensionInput), aaExcess:r2(aaExcess),
+  };
+}
+
+function calcChildcare(inputs, result) {
+  const ani        = result.ani;
+  const eligible   = ani <= 100000;
+  const aniGap     = Math.max(0, ani - 100000);
+  const count      = Math.min(4, Math.max(1, Number(inputs.childrenCount) || 1));
+  const TFC_MAX_GOVT = 2000; // max govt top-up per child per year
+  const pensionBase = inputs.pensionIncludeBonus ? result.sal + result.bon : result.sal;
+  const pensionBaseName = inputs.pensionIncludeBonus ? "salary and bonus" : "base salary";
+
+  let currentTotalChildcareCost = 0;
+  let optimisedTotalChildcareCost = 0;
+  const childDetails = [];
+
+  for (let i = 1; i <= count; i++) {
+    const age = inputs[`child${i}Age`] || '0-2';
+    const monthlyFullFee   = Math.max(0, Number(inputs[`child${i}MonthlyCost`]) || 0);
+    const monthlyFundedFee = Math.max(0, Number(inputs[`child${i}MonthlyFundedCost`]) || 0);
+    const annualFullFee    = monthlyFullFee * 12;
+    const annualFundedFee  = monthlyFundedFee * 12;
+
+    const eligibleFreeHours = age === '9m-2y' || age === '3-4';
+    const eligibleTfc = age !== '0-8m';
+
+    // Scenario A: Do nothing (Uses current ANI)
+    const currentFreeHoursActive = eligible && eligibleFreeHours;
+    const currentTfcActive = eligible && eligibleTfc;
+    const currentFeeBeforeTfc = currentFreeHoursActive ? annualFundedFee : annualFullFee;
+    const currentTfcTopUp = currentTfcActive ? Math.min(currentFeeBeforeTfc * 0.2, TFC_MAX_GOVT) : 0;
+    const currentFinalCost = currentFeeBeforeTfc - currentTfcTopUp;
+
+    // Scenario B: Optimised (Sacrifice down to £100k, so ANI < £100k)
+    // Note: If you're already < £100k, Scenario B is identical to Scenario A.
+    const optFreeHoursActive = eligibleFreeHours;
+    const optTfcActive = eligibleTfc;
+    const optFeeBeforeTfc = optFreeHoursActive ? annualFundedFee : annualFullFee;
+    const optTfcTopUp = optTfcActive ? Math.min(optFeeBeforeTfc * 0.2, TFC_MAX_GOVT) : 0;
+    const optFinalCost = optFeeBeforeTfc - optTfcTopUp;
+
+    currentTotalChildcareCost += currentFinalCost;
+    optimisedTotalChildcareCost += optFinalCost;
+
+    childDetails.push({ 
+      index: i, age, 
+      annualFullFee, annualFundedFee, 
+      eligibleFreeHours, eligibleTfc,
+      currentFreeHoursActive, currentTfcActive, currentTfcTopUp, currentFinalCost,
+      optFreeHoursActive, optTfcActive, optTfcTopUp, optFinalCost
+    });
+  }
+
+  const extraSacrificeNeeded = aniGap;
+  const currentTakeHome = result.finalTakeHomeBonus;
+  const annualTakeHomeReduction = extraSacrificeNeeded * (1 - result.marginalRate);
+  const optimisedTakeHome = currentTakeHome - annualTakeHomeReduction;
+
+  const currentLiquidity = currentTakeHome - currentTotalChildcareCost;
+  const optimisedLiquidity = optimisedTakeHome - optimisedTotalChildcareCost;
+  const netBenefit = optimisedLiquidity - currentLiquidity; // Positive means sacrificing is better
+
+  const currentTotalTfc = childDetails.reduce((s,c) => s + c.currentTfcTopUp, 0);
+  const optTotalTfc = childDetails.reduce((s,c) => s + c.optTfcTopUp, 0);
+
+  const extraSacPctRaw = pensionBase > 0 ? (extraSacrificeNeeded / pensionBase) * 100 : 0;
+  const extraSacPct = Math.ceil((extraSacPctRaw - 0.00001) * 10) / 10;
+  const currentPensionPctRaw = pensionBase > 0 ? (result.pensionEmpAnnual / pensionBase) * 100 : 0;
+  const totalPensionPct = Math.round((currentPensionPctRaw + extraSacPct) * 10) / 10;
+  const newTotalPensionInput = result.totalPensionInput + extraSacrificeNeeded;
+  const goesOverAllowance = newTotalPensionInput > result.annualAllowance;
+
+  return {
+    ani, eligible, aniGap, count, childDetails,
+    currentTotalChildcareCost, optimisedTotalChildcareCost, currentTotalTfc, optTotalTfc,
+    extraSacrificeNeeded, currentTakeHome, optimisedTakeHome,
+    annualTakeHomeReduction, 
+    currentLiquidity, optimisedLiquidity, netBenefit,
+    worthIt: netBenefit > 0,
+    extraSacPct, totalPensionPct, newTotalPensionInput, goesOverAllowance, annualAllowance: result.annualAllowance, pensionBaseName
+  };
+}
+
+function calcBudget(inputs, result) {
+  const r2 = n => Math.round((n + Number.EPSILON) * 100) / 100;
+  const monthlyTakeHome = r2(result.finalTakeHome / 12);
+  
+  const housing = r2((Number(inputs.budgetMortgageRent) || 0) + (Number(inputs.budgetCouncilTax) || 0) +
+                     (Number(inputs.budgetHomeInsurance) || 0));
+  const utilities = r2((Number(inputs.budgetEnergy) || 0) + (Number(inputs.budgetWater) || 0) + 
+                    (Number(inputs.budgetInternet) || 0) + (Number(inputs.budgetOtherUtilities) || 0));
+
+  // Transport (dynamic cars)
+  let transport = 0;
+  const carsCount = Number(inputs.budgetCarsCount) || 0;
+  const carDetails = [];
+  for (let i = 0; i < carsCount; i++) {
+    const name = inputs[`car${i}Name`] || `Car ${i+1}`;
+    const payment = Number(inputs[`car${i}Payment`]) || 0;
+    const maintenance = Number(inputs[`car${i}Maintenance`]) || 0;
+    const roadTax = Number(inputs[`car${i}RoadTax`]) || 0;
+    const insurance = Number(inputs[`car${i}Insurance`]) || 0;
+    const other = Number(inputs[`car${i}Other`]) || 0;
+    const carTotal = r2(payment + maintenance + roadTax + insurance + other);
+    transport += carTotal;
+    carDetails.push({ name, payment, maintenance, roadTax, insurance, other, total: carTotal });
+  }
+  transport = r2(transport + (Number(inputs.budgetPublicTransport) || 0));
+
+  const lifestyle = r2((Number(inputs.budgetGroceries) || 0) + (Number(inputs.budgetHousehold) || 0) + 
+                    (Number(inputs.budgetEatingOut) || 0) + (Number(inputs.budgetGym) || 0) + 
+                    (Number(inputs.budgetShopping) || 0) + (Number(inputs.budgetHolidays) || 0) +
+                    (Number(inputs.budgetLifeInsurance) || 0));
+  const savings = r2((Number(inputs.budgetSaving) || 0) + (Number(inputs.budgetInvesting) || 0));
+  const financial = r2(savings + (Number(inputs.budgetSinkingFunds) || 0));
+
+  const totalExpenses = r2(housing + utilities + transport + lifestyle + financial);
+  const remaining = r2(monthlyTakeHome - totalExpenses);
+
+  return {
+    monthlyTakeHome,
+    housing,
+    utilities,
+    transport,
+    carDetails,
+    carsCount,
+    lifestyle,
+    financial,
+    savings,
+    totalExpenses,
+    remaining: Object.is(remaining, -0) ? 0 : remaining
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════════════════════
+const _gbp2 = new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP',minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt  = n => { 
+  let v = Math.round((n||0)*100)/100; 
+  if (Object.is(v, -0)) v = 0;
+  return v < 0 ? `(${_gbp2.format(-v)})` : _gbp2.format(v); 
+};
+const fmtD = fmt;
+const clamp2dp = v => { const n = parseFloat(v); return isNaN(n) ? v : Math.round(n*100)/100; };
+const pct  = n => `${((n||0)*100).toFixed(2)}%`;
+const pp   = (annual, freq) => { const v = freq === 'monthly' ? annual / 12 : annual; return Math.round((v||0)*100)/100; };
+const ppLabel = freq => freq === 'monthly' ? '/ mo' : '/ yr';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BASE COMPONENTS
+// ═══════════════════════════════════════════════════════════════════════════════
+function AnimNum({ value, formatter }) {
+  formatter = formatter || fmt;
+  const [disp, setDisp] = useState(value);
+  const prev = useRef(value);
+  const raf  = useRef(null);
+  useEffect(() => {
+    const from = prev.current, to = value;
+    prev.current = to;
+    if (Math.abs(from - to) < 0.5) { setDisp(to); return; }
+    let start = null;
+    cancelAnimationFrame(raf.current);
+    raf.current = requestAnimationFrame(function step(ts) {
+      if (!start) start = ts;
+      const p = Math.min((ts - start) / 450, 1);
+      const e = p < 1 ? p*p*(3-2*p) : 1;
+      setDisp(from + (to - from) * e);
+      if (p < 1) raf.current = requestAnimationFrame(step);
+    });
+    return () => cancelAnimationFrame(raf.current);
+  }, [value]);
+  return React.createElement(React.Fragment, null, formatter(disp));
+}
+
+function Toggle({ value, onChange, options, small }) {
+  return (
+    <div style={{display:'flex',flexWrap:'wrap',background:'var(--surface2)',borderRadius:small?8:10,padding:small?2:3,gap:2,border:'1.5px solid var(--border)'}}>
+      {options.map(o => (
+        <button key={String(o.value)} onClick={()=>onChange(o.value)} style={{
+          flex: '1 1 auto',
+          padding:small?'4px 10px':'6px 14px',borderRadius:small?6:8,border:'none',cursor:'pointer',
+          fontSize:small?11:12,fontWeight:600,fontFamily:'DM Sans',
+          background:value===o.value?'var(--surface)':'transparent',
+          color:value===o.value?'var(--text)':'var(--muted)',
+          boxShadow:value===o.value?'0 1px 4px rgba(0,0,0,.1)':'none',
+          transition:'all .2s',whiteSpace:'nowrap',
+        }}>{o.label}</button>
+      ))}
+    </div>
+  );
+}
+
+function Label({ children, htmlFor, right }) {
+  return (
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+      <label htmlFor={htmlFor} style={{fontSize:11,fontWeight:600,color:'var(--muted)',letterSpacing:'0.07em',textTransform:'uppercase'}}>{children}</label>
+      {right&&<span style={{fontSize:12,fontWeight:700,color:'var(--accent)',fontVariantNumeric:'tabular-nums'}}>{right}</span>}
+    </div>
+  );
+}
+
+function Card({ children, style }) {
+  return <div style={{background:'var(--surface)',borderRadius:16,border:'1.5px solid var(--border)',padding:'18px 18px',...style}}>{children}</div>;
+}
+
+function InfoBox({ children, type, style }) {
+  type = type || 'info';
+  const colors = {
+    info:    {bg:'var(--info-bg)',   text:'var(--info-text)', border:'var(--info-border)'},
+    good:    {bg:'var(--green-bg)',  text:'var(--green)',     border:'color-mix(in oklch,var(--green) 30%,transparent)'},
+    warn:    {bg:'color-mix(in oklch,var(--accent) 10%,var(--surface2))',text:'var(--accent)',border:'color-mix(in oklch,var(--accent) 25%,transparent)'},
+    neutral: {bg:'var(--surface2)', text:'var(--muted)',      border:'var(--border)'},
+  };
+  const c = colors[type] || colors.info;
+  return (
+    <div style={{fontSize:12,lineHeight:1.6,padding:'10px 12px',borderRadius:10,background:c.bg,color:c.text,border:`1px solid ${c.border}`,...style}}>
+      {children}
+    </div>
+  );
+}
+
+function Explainer({ children, type }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{marginTop:8}}>
+      <button onClick={()=>setOpen(v=>!v)} style={{
+        display:'inline-flex',alignItems:'center',gap:5,fontSize:11,color:'var(--muted)',
+        background:'none',border:'none',cursor:'pointer',fontFamily:'DM Sans',padding:0,fontWeight:500,
+      }}>
+        <span style={{width:16,height:16,borderRadius:'50%',background:'var(--surface2)',border:'1.5px solid var(--border)',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'var(--muted)',flexShrink:0}}>?</span>
+        {open ? 'Hide explanation' : 'How does this work?'}
+      </button>
+      {open && <div style={{marginTop:8,animation:'fadeUp .2s ease both'}}><InfoBox type={type||'info'}>{children}</InfoBox></div>}
+    </div>
+  );
+}
+
+function SwitchToggle({ checked, onChange }) {
+  return (
+    <div onClick={()=>onChange(!checked)} style={{
+      width:34,height:19,borderRadius:10,background:checked?'var(--accent)':'var(--border)',
+      position:'relative',transition:'background .2s',flexShrink:0,cursor:'pointer',
+    }}>
+      <div style={{
+        position:'absolute',top:2.5,left:checked?17:2.5,width:14,height:14,
+        borderRadius:'50%',background:'white',transition:'left .2s',
+        boxShadow:'0 1px 3px rgba(0,0,0,.25)',
+      }}/>
+    </div>
+  );
+}
+
+function PoundInput({ value, onChange, placeholder, suffix, small }) {
+  return (
+    <div style={{position:'relative'}}>
+      <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',fontSize:small?13:14,fontWeight:600,color:'var(--muted)',pointerEvents:'none'}}>£</span>
+      <input type="number" step="0.01" value={value} onChange={e=>onChange(e.target.value)}
+        onBlur={e=>onChange(clamp2dp(e.target.value))} placeholder={placeholder||'0'}
+        style={{paddingLeft:22,paddingRight:suffix?38:12,fontSize:small?13:14}}/>
+      {suffix&&<span style={{position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',fontSize:11,color:'var(--muted)',pointerEvents:'none'}}>{suffix}</span>}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DONUT CHART
+// ═══════════════════════════════════════════════════════════════════════════════
+function DonutChart({ result, freq }) {
+  const size=180,r=68,cx=90,cy=90;
+  const circum = 2*Math.PI*r;
+  const [prog,setProg] = useState(0);
+  const animRef = useRef(null);
+  const key = `${result.sal}-${result.incomeTax}-${result.niAmount}-${result.slAmount}-${result.pensionSacAnnual}-${result.pensionReliefAmount}`;
+  useEffect(()=>{
+    setProg(0);let start=null;
+    animRef.current=requestAnimationFrame(function run(ts){
+      if(!start)start=ts;
+      const p=Math.min((ts-start)/650,1);
+      setProg(p<1?p*p*(3-2*p):1);
+      if(p<1)animRef.current=requestAnimationFrame(run);
+    });
+    return ()=>cancelAnimationFrame(animRef.current);
+  },[key]);
+
+  const totalPension = result.pensionSacAnnual + result.pensionReliefAmount;
+  const deductionSegs = [
+    result.incomeTax > 0  && {label:'Income Tax',    value:result.incomeTax,  color:'var(--c1)'},
+    result.niAmount > 0   && {label:'Nat. Insurance',value:result.niAmount,   color:'var(--c2)'},
+    result.slAmount > 0   && {label:'Student Loan',  value:result.slAmount,   color:'var(--c4)'},
+    totalPension > 0      && {label:'Pension',       value:totalPension,      color:'var(--c5)'},
+    result.evSacAnnual > 0 && {label:'EV Sacrifice', value:result.evSacAnnual,color:'oklch(62% 0.10 280)'},
+  ].filter(Boolean);
+  const totalDeductions = deductionSegs.reduce((s, seg) => s + seg.value, 0);
+  const takeHomeSlice = Math.max(0, (result.sal || 0) - totalDeductions);
+  const segs = [
+    {label:'Take Home', value:takeHomeSlice, color:'var(--c3)'},
+    ...deductionSegs,
+  ];
+  const total = result.sal || 1;
+  let offset=0;
+
+  return (
+    <div id="salary-chart-container" style={{display:'flex',alignItems:'center',gap:20,flexWrap:'wrap',justifyContent:'center'}}>
+      <svg width={size} height={size} style={{flexShrink:0}}>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--border)" strokeWidth={18}/>
+        {segs.map((seg,i)=>{
+          const frac=(seg.value/total)*prog;
+          const dash=frac*circum;
+          const gap=circum-dash;
+          const currentOffset = offset;
+          offset+=seg.value/total;
+          return <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={seg.color} strokeWidth={18}
+            strokeDasharray={`${dash} ${gap}`} strokeDashoffset={circum*0.25 - currentOffset*circum*prog} strokeLinecap="butt"/>;
+        })}
+        <text x={cx} y={cy-10} textAnchor="middle" fill="var(--muted)" fontSize="10" fontFamily="DM Sans" fontWeight="600" letterSpacing="0.05em">TAKE HOME</text>
+        <text x={cx} y={cy+10} textAnchor="middle" fill="var(--text)" fontSize="16" fontFamily="DM Sans" fontWeight="700">{fmt(pp(result.takeHome,freq))}</text>
+        <text x={cx} y={cy+26} textAnchor="middle" fill="var(--muted)" fontSize="9" fontFamily="DM Sans">{ppLabel(freq)}</text>
+      </svg>
+      <div style={{display:'flex',flexDirection:'column',gap:6}}>
+        {segs.map((seg,i)=>(
+          <div key={i} style={{display:'flex',alignItems:'center',gap:7}}>
+            <div style={{width:9,height:9,borderRadius:2,background:seg.color,flexShrink:0}}/>
+            <span style={{fontSize:11,color:'var(--muted)',fontWeight:500,minWidth:96}}>{seg.label}</span>
+            <span style={{fontSize:11,color:'var(--text)',fontWeight:600,fontVariantNumeric:'tabular-nums'}}>{pct(seg.value/total)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BREAKDOWN CARD (with clickable expandable rows)
+// ═══════════════════════════════════════════════════════════════════════════════
+function BreakdownCard({ result, freq, inputs }) {
+  const [exp, setExp] = useState({});
+  const toggle = k => setExp(p=>({...p,[k]:!p[k]}));
+  const f = v => fmt(pp(v, freq));
+  const yd = result.yearData;
+  const isScottish = inputs.region === 'scotland';
+  const totalPension = result.pensionSacAnnual + result.pensionReliefAmount;
+
+  const Row = ({label, value, sub, color, expandable, ek, muted, indent}) => (
+    <div>
+      <div onClick={expandable?()=>toggle(ek):undefined}
+        style={{display:'grid',gridTemplateColumns:'1fr auto',alignItems:'center',
+          padding:'8px 0',paddingLeft:indent?16:0,
+          cursor:expandable?'pointer':'default',
+          opacity:muted?0.65:1,borderRadius:6,
+          background:expandable&&exp[ek]?'color-mix(in oklch,var(--accent) 5%,transparent)':'transparent',
+          transition:'background .15s',
+        }}
+        onMouseEnter={e=>{if(expandable)e.currentTarget.style.background='color-mix(in oklch,var(--accent) 6%,transparent)';}}
+        onMouseLeave={e=>{e.currentTarget.style.background=expandable&&exp[ek]?'color-mix(in oklch,var(--accent) 5%,transparent)':'transparent';}}>
+        <div style={{display:'flex',alignItems:'center',gap:5}}>
+          {expandable&&<span style={{fontSize:9,color:'var(--muted)',transition:'transform .2s',display:'inline-block',transform:exp[ek]?'rotate(90deg)':'rotate(0deg)'}}>▶</span>}
+          <div>
+            <div style={{fontSize:13,fontWeight:500,color:color||'var(--text)'}}>{label}</div>
+            {sub&&<div style={{fontSize:10,color:'var(--muted)',marginTop:1}}>{sub}</div>}
+          </div>
+        </div>
+        <span style={{fontSize:13,fontWeight:600,color:color||'var(--text)',fontVariantNumeric:'tabular-nums',minWidth:80,textAlign:'right'}}>
+          <AnimNum value={value}/>
+        </span>
+      </div>
+    </div>
+  );
+
+  const Detail = ({children}) => (
+    <div style={{marginLeft:16,marginBottom:6,animation:'fadeUp .2s ease both'}}>
+      <InfoBox type="info" style={{fontSize:11}}>{children}</InfoBox>
+    </div>
+  );
+
+  return (
+    <Card>
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)',marginBottom:8}}>Full Breakdown {ppLabel(freq)}</div>
+      <div style={{borderBottom:'1.5px solid var(--border)',marginBottom:4}}/>
+
+      <Row label="Gross Salary" value={pp(result.sal,freq)}/>
+
+      {result.totalAllowances>0&&<>
+        <Row label="Allowances & Additional Pay" value={pp(result.totalAllowances,freq)} color="var(--muted)" expandable ek="alw"/>
+        {exp.alw&&<Detail>
+          <strong>Payroll allowances</strong> are added to your taxable income and NI-able earnings — treated the same as salary for Income Tax, NI, and student loan purposes. Excluded from pension.<br/>
+          {inputs.allowanceCar>0&&<div style={{marginTop:4}}>• Car/Travel Allowance: {fmt(inputs.allowanceCar)}/yr</div>}
+          {inputs.allowanceOnCall>0&&<div>• On-Call/Shift Allowance: {fmt(inputs.allowanceOnCall)}/yr</div>}
+          {inputs.allowanceOther>0&&<div>• Other: {fmt(inputs.allowanceOther)}/yr</div>}
+        </Detail>}
+      </>}
+
+      {result.totalSacrifice>0&&<>
+        <Row label="Salary Sacrifice" value={-pp(result.totalSacrifice,freq)} color="var(--muted)" expandable ek="sac"/>
+        {exp.sac&&<Detail>
+          <strong>Salary sacrifice</strong> reduces your gross pay before Income Tax and NI are calculated — saving tax on the full sacrificed amount.
+          {result.pensionSacAnnual>0&&<div style={{marginTop:4}}>• Pension: {f(result.pensionSacAnnual)}</div>}
+          {result.evSacAnnual>0&&<div>• EV/Car: {f(result.evSacAnnual)}</div>}
+          {result.otherSacAnnual>0&&<div>• Other: {f(result.otherSacAnnual)}</div>}
+          <div style={{marginTop:4,borderTop:'1px solid var(--info-border)',paddingTop:4}}>Gross after sacrifice: <strong>{f(result.grossAfterSac)}</strong></div>
+        </Detail>}
+      </>}
+
+      {result.totalBenefits>0&&<>
+        <Row label="Taxable Benefits (P11D)" value={pp(result.totalBenefits,freq)} color="var(--muted)" expandable ek="ben"/>
+        {exp.ben&&<Detail>
+          <strong>Benefits in Kind</strong> are employer perks added to your taxable income. You pay Income Tax on them (but not employee NI).
+          {result.p11dBenefits>0&&<div style={{marginTop:4}}>• P11D benefits: {f(result.p11dBenefits)}</div>}
+          {result.evBikValue>0&&<div>• EV BIK ({pct(result.bikPct)} of P11D): {f(result.evBikValue)}</div>}
+          <div style={{marginTop:4}}>Taxable income: <strong>{f(result.taxableIncome)}</strong></div>
+        </Detail>}
+      </>}
+
+      {result.otherIncomeAnnual>0&&<>
+        <Row label="Other Taxable Income" value={pp(result.otherIncomeAnnual,freq)} color="var(--muted)" expandable ek="oti"/>
+        {exp.oti&&<Detail>
+          <strong>Other taxable income</strong> is added to your taxable income for Income Tax — but does not affect employee NI, pension, or student loan calculations.<br/>
+          {inputs.otherIncomeRental>0&&<div style={{marginTop:4}}>• Rental/Property: {fmt(inputs.otherIncomeRental)}/yr</div>}
+          {inputs.otherIncomeSavings>0&&<div>• Savings & Interest: {fmt(inputs.otherIncomeSavings)}/yr</div>}
+          {inputs.otherIncomeDividends>0&&<div>• Dividends: {fmt(inputs.otherIncomeDividends)}/yr</div>}
+          {inputs.otherIncomeOther>0&&<div>• Other: {fmt(inputs.otherIncomeOther)}/yr</div>}
+        </Detail>}
+      </>}
+
+      {(()=>{
+        const ani = result.ani;
+        return (
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'6px 0',borderTop:'1px dashed var(--border)',borderBottom:'1px dashed var(--border)',margin:'4px 0',background:'color-mix(in oklch,var(--accent) 4%,transparent)',borderRadius:6,paddingLeft:8,paddingRight:4}}>
+            <div>
+              <div style={{fontSize:12,fontWeight:600,color:'var(--text)'}}>Adjusted Net Income</div>
+              <div style={{fontSize:10,color:'var(--muted)'}}>Used for PA taper & Child Benefit</div>
+            </div>
+            <span style={{fontSize:13,fontWeight:700,color:'var(--text)',fontVariantNumeric:'tabular-nums',minWidth:80,textAlign:'right'}}><AnimNum value={pp(ani,freq)}/></span>
+          </div>
+        );
+      })()}
+
+      <Row label="Income Tax" value={-pp(result.incomeTax,freq)} color="var(--red)" expandable ek="it"
+        sub={result.effectivePA < yd.pa ? `Reduced PA: ${fmt(result.effectivePA)}` : undefined}/>
+      {exp.it&&<Detail>
+        <strong>Income Tax</strong> · {inputs.taxYear} · {isScottish?'Scottish rates':'England/Wales/NI rates'}<br/>
+        <div style={{marginTop:6}}>
+          Gross salary: {f(result.sal)}<br/>
+          {result.totalSacrifice>0&&<span>Less sacrifice: −{f(result.totalSacrifice)}<br/></span>}
+          {result.totalBenefits>0&&<span>Plus benefits: +{f(result.totalBenefits)}<br/></span>}
+          <strong>Taxable income: {f(result.taxableIncome)}</strong>
+        </div>
+        {result.effectivePA!==yd.pa&&<div style={{marginTop:6,color:'var(--accent)'}}>⚠ Personal Allowance tapered from {fmt(yd.pa)} to {fmt(result.effectivePA)} (income over £100,000 reduces PA by £1 per £2 — effective 60% marginal rate between £100k–£125,140).</div>}
+        {result.effectivePA>0&&<div style={{marginTop:4}}>Personal Allowance {fmt(result.effectivePA)} @ 0%</div>}
+        {result.bandBreakdown.map((b,i)=><div key={i} style={{marginTop:2}}>{b.name} ({(b.rate*100).toFixed(0)}%): {fmt(b.taxable)} → <strong>{fmt(b.amount)}</strong></div>)}
+        <div style={{marginTop:4,borderTop:'1px solid var(--info-border)',paddingTop:4}}>Total Income Tax: <strong>{f(result.incomeTax)}</strong></div>
+      </Detail>}
+
+      {result.bandBreakdown.map((b,i)=>(
+        <Row key={i} label={b.name} value={-pp(b.amount,freq)} sub={`${(b.rate*100).toFixed(0)}% on ${fmt(b.taxable)}`} color="var(--red)" muted indent/>
+      ))}
+
+      <Row label="National Insurance" value={-pp(result.niAmount,freq)} color="var(--red)" expandable ek="ni"/>
+      {exp.ni&&<Detail>
+        <strong>Employee NI</strong> is calculated on your earnings after salary sacrifice (not on P11D benefits).<br/>
+        <div style={{marginTop:4}}>
+          NI-able earnings: <strong>{f(result.grossAfterSac)}</strong><br/>
+          Lower Earnings Limit: {fmt(yd.ni.lower)}<br/>
+          {result.grossAfterSac>yd.ni.lower&&<span>{(yd.ni.rate1*100).toFixed(0)}% on {fmt(Math.min(result.grossAfterSac,yd.ni.upper)-yd.ni.lower)}: <strong>{fmt((Math.min(result.grossAfterSac,yd.ni.upper)-yd.ni.lower)*yd.ni.rate1)}</strong><br/></span>}
+          {result.grossAfterSac>yd.ni.upper&&<span>{(yd.ni.rate2*100).toFixed(0)}% on {fmt(result.grossAfterSac-yd.ni.upper)} (above UEL): <strong>{fmt((result.grossAfterSac-yd.ni.upper)*yd.ni.rate2)}</strong><br/></span>}
+          Total NI: <strong>{f(result.niAmount)}</strong>
+        </div>
+      </Detail>}
+
+      {result.slAmount>0&&<>
+        <Row label={`Student Loan (${inputs.studentLoan})`} value={-pp(result.slAmount,freq)} color="var(--muted)" expandable ek="sl"/>
+        {exp.sl&&yd.studentLoan[inputs.studentLoan]&&<Detail>
+          <strong>{inputs.studentLoan} repayments</strong> collected via PAYE on gross salary before sacrifice.<br/>
+          <div style={{marginTop:4}}>
+            Threshold: {fmt(yd.studentLoan[inputs.studentLoan].threshold)}<br/>
+            Rate: {(yd.studentLoan[inputs.studentLoan].rate*100).toFixed(0)}% on earnings above threshold<br/>
+            Repayable earnings: {fmt(Math.max(0,result.sal-yd.studentLoan[inputs.studentLoan].threshold))}<br/>
+            Annual repayment: <strong>{f(result.slAmount)}</strong>
+          </div>
+        </Detail>}
+      </>}
+
+      {totalPension>0&&<>
+        <Row label={`Pension Employee (${result.pensionEmpMethod==='sacrifice'?'Sacrifice':'Relief at Source'})`}
+          value={result.pensionEmpMethod==='sacrifice'?0:-pp(result.pensionReliefNet,freq)}
+          sub={result.pensionEmpMethod==='sacrifice'?`${f(result.pensionSacAnnual)} deducted from gross`:undefined}
+          color="var(--muted)" expandable ek="pen" muted={result.pensionEmpMethod==='sacrifice'}/>
+        {exp.pen&&<Detail>
+          {result.pensionEmpMethod==='sacrifice'
+            ?<span><strong>Salary sacrifice pension</strong> — {f(result.pensionSacAnnual)} was deducted from gross before tax and NI, saving both. Income tax saved: ~{fmt(result.pensionSacAnnual*(result.marginalRate*0.6))} | NI saved: ~{fmt(calcNI(result.grossAfterSac+result.pensionSacAnnual,yd.ni)-result.niAmount)}</span>
+            :<span><strong>Relief at Source pension</strong> — you contribute {f(result.pensionReliefNet)} from net pay. HMRC adds 20% basic rate relief automatically. Higher/additional rate taxpayers can claim extra relief via Self Assessment.</span>
+          }
+          {result.pensionErAnnual>0&&<div style={{marginTop:6,borderTop:'1px solid var(--info-border)',paddingTop:6}}>Employer contribution: {fmt(result.pensionErAnnual)} (added to pension — not deducted from your pay)</div>}
+        </Detail>}
+      </>}
+
+      {result.evBikValue>0&&<>
+        <Row label="EV Benefit in Kind Tax" value={-pp(result.evBikTax,freq)} color="var(--muted)" expandable ek="ev"/>
+        {exp.ev&&<Detail>
+          <strong>BIK tax on electric vehicle</strong> — you pay Income Tax on the benefit value of the car.<br/>
+          <div style={{marginTop:4}}>
+            BIK rate ({inputs.taxYear}): {pct(result.bikPct)}<br/>
+            BIK value: {fmt(result.evBikValue)}<br/>
+            Tax on BIK (marginal {pct(result.marginalRate)}): <strong>{fmt(result.evBikTax)}</strong>
+          </div>
+          <div style={{marginTop:6}}>Net annual cost after all savings: <strong>{fmt(result.evNetCost)}</strong> ({fmt(result.evNetCost/12)}/mo)</div>
+        </Detail>}
+      </>}
+
+      <div style={{borderTop:'2px solid var(--border)',paddingTop:12,marginTop:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <span style={{fontSize:14,fontWeight:700}}>Take-Home Pay</span>
+        <span style={{fontSize:16,fontWeight:700,color:'var(--accent)',fontVariantNumeric:'tabular-nums'}}><AnimNum value={pp(result.takeHome,freq)}/></span>
+      </div>
+      {result.bon>0&&<div style={{marginTop:6,paddingTop:8,borderTop:'1px dashed var(--border)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <span style={{fontSize:12,color:'var(--muted)'}}>With bonus ({fmt(result.bon)})</span>
+        <span style={{fontSize:13,fontWeight:600,color:'var(--green)',fontVariantNumeric:'tabular-nums'}}><AnimNum value={pp(result.takeHomeBonus,freq)}/></span>
+      </div>}
+
+      {(result.netAdjDeductions>0||result.netAdjAdditions>0)&&<>
+        <div style={{marginTop:12,borderTop:'1px solid var(--border)',paddingTop:10}}>
+          <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)',marginBottom:8}}>Net Pay Adjustments {ppLabel(freq)}</div>
+          {(inputs.netDeductions||[]).map(d=>(Number(d.amount)||0)>0&&(
+            <div key={d.id} style={{display:'flex',justifyContent:'space-between',fontSize:12,padding:'3px 0',color:'var(--muted)'}}>
+              <span>{d.label||'Deduction'}</span>
+              <span style={{color:'var(--red)',fontVariantNumeric:'tabular-nums'}}>{fmt(-pp((Number(d.amount)||0)*12,freq))}</span>
+            </div>
+          ))}
+          {(inputs.netAdditions||[]).map(a=>(Number(a.amount)||0)>0&&(
+            <div key={a.id} style={{display:'flex',justifyContent:'space-between',fontSize:12,padding:'3px 0',color:'var(--muted)'}}>
+              <span>{a.label||'Addition'}</span>
+              <span style={{color:'var(--green)',fontVariantNumeric:'tabular-nums'}}>{fmt(pp((Number(a.amount)||0)*12,freq))}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{borderTop:'2px solid var(--accent)',paddingTop:10,marginTop:6,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <span style={{fontSize:14,fontWeight:700}}>Net Take-Home</span>
+          <span style={{fontSize:16,fontWeight:700,color:'var(--accent)',fontVariantNumeric:'tabular-nums'}}><AnimNum value={pp(result.finalTakeHome,freq)}/></span>
+        </div>
+        {result.bon>0&&<div style={{marginTop:6,paddingTop:8,borderTop:'1px dashed var(--border)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <span style={{fontSize:12,color:'var(--muted)'}}>Net with bonus ({fmt(result.bon)})</span>
+          <span style={{fontSize:13,fontWeight:600,color:'var(--green)',fontVariantNumeric:'tabular-nums'}}><AnimNum value={pp(result.finalTakeHomeBonus,freq)}/></span>
+        </div>}
+      </>}
+
+      {(result.pensionEmpAnnual>0||result.pensionErEffective>0)&&(()=>{
+        const empCon = result.pensionEmpAnnual;
+        const erCon  = result.pensionErEffective;
+        const total  = empCon + erCon;
+        return (
+          <div style={{marginTop:12,paddingTop:12,borderTop:'1px solid var(--border)',background:'color-mix(in oklch,var(--green) 6%,transparent)',borderRadius:8,padding:10}}>
+            <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)',marginBottom:8}}>Pension Pot Summary {ppLabel(freq)}</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:'4px 8px',fontSize:12}}>
+              <span style={{color:'var(--muted)'}}>Employee contribution</span>
+              <span style={{textAlign:'right',fontWeight:600,fontVariantNumeric:'tabular-nums',color:'var(--text)'}}><AnimNum value={pp(empCon,freq)}/></span>
+              <span style={{color:'var(--muted)'}}>Employer contribution</span>
+              <span style={{textAlign:'right',fontWeight:600,fontVariantNumeric:'tabular-nums',color:'var(--green)'}}><AnimNum value={pp(erCon,freq)}/></span>
+              {result.pensionErNiSaving>0&&<>
+                <span style={{color:'var(--muted)',fontSize:10,paddingLeft:8}}>— base employer</span>
+                <span style={{textAlign:'right',fontSize:10,color:'var(--muted)',fontVariantNumeric:'tabular-nums'}}>{fmt(pp(result.pensionErAnnual,freq))}</span>
+                <span style={{color:'var(--muted)',fontSize:10,paddingLeft:8}}>— NI saving passed on</span>
+                <span style={{textAlign:'right',fontSize:10,color:'var(--green)',fontVariantNumeric:'tabular-nums'}}>{fmt(pp(result.pensionErNiSaving,freq))}</span>
+              </>}
+              <div style={{borderTop:'1px solid var(--border)',gridColumn:'1/-1',margin:'4px 0'}}/>
+              <span style={{fontWeight:700,color:'var(--text)'}}>Total to pension pot</span>
+              <span style={{textAlign:'right',fontWeight:700,color:'var(--green)',fontVariantNumeric:'tabular-nums'}}><AnimNum value={pp(total,freq)}/></span>
+            </div>
+          </div>
+        );
+      })()}
+    </Card>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MONTHLY PAYSLIP
+// ═══════════════════════════════════════════════════════════════════════════════
+function PayslipCard({ result, inputs }) {
+  const [tab, setTab] = useState('normal');
+  const hasBonus = result.bon > 0;
+  const yd = result.yearData;
+
+  const SlipRow = ({label, amount, bold, border, color, sub}) => (
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'5px 0',borderTop:border?'1px solid var(--border)':'none'}}>
+      <div>
+        <span style={{fontSize:12,fontWeight:bold?700:400,color:color||'var(--text)'}}>{label}</span>
+        {sub&&<div style={{fontSize:10,color:'var(--muted)'}}>{sub}</div>}
+      </div>
+      <span style={{fontSize:12,fontWeight:bold?700:500,color:color||'var(--text)',fontVariantNumeric:'tabular-nums'}}>
+        {fmt(amount)}
+      </span>
+    </div>
+  );
+
+  const ns  = result.totalSacrifice/12;
+  const nIT = result.incomeTax/12;
+  const nNI = result.niAmount/12;
+  const nSL = result.slAmount/12;
+  const nPen = result.pensionReliefNet/12;
+  const nNet = result.takeHome/12;
+
+  return (
+    <Card>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)'}}>Monthly Payslip</div>
+        {hasBonus&&<Toggle value={tab} onChange={setTab} small options={[{value:'normal',label:'Regular Month'},{value:'bonus',label:'Bonus Month'}]}/>}
+      </div>
+
+      {tab==='normal'&&<div>
+        <div style={{fontSize:10,fontWeight:600,color:'var(--muted)',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Earnings</div>
+        <SlipRow label="Basic Salary" amount={result.sal/12}/>
+        {ns>0&&<SlipRow label="Salary Sacrifice" amount={-ns} color="var(--muted)" sub="pre-tax deduction"/>}
+        <div style={{borderTop:'1px solid var(--border)',marginTop:4}}/>
+        <div style={{fontSize:10,fontWeight:600,color:'var(--muted)',marginBottom:4,marginTop:8,textTransform:'uppercase',letterSpacing:'0.05em'}}>Deductions</div>
+        <SlipRow label="PAYE Income Tax" amount={-nIT} color="var(--red)"/>
+        <SlipRow label="National Insurance" amount={-nNI} color="var(--red)"/>
+        {nSL>0&&<SlipRow label={`Student Loan (${inputs.studentLoan})`} amount={-nSL} color="var(--muted)"/>}
+        {nPen>0&&<SlipRow label="Pension (Relief at Source)" amount={-nPen} color="var(--muted)"/>}
+        <SlipRow label="Net Pay" amount={nNet} bold border color="var(--accent)"/>
+      </div>}
+
+      {tab==='bonus'&&<div>
+        <div style={{fontSize:10,fontWeight:600,color:'var(--muted)',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Earnings</div>
+        <SlipRow label="Basic Salary" amount={result.sal/12}/>
+        <SlipRow label="Bonus" amount={result.bon} color="var(--green)"/>
+        {ns>0&&<SlipRow label="Salary Sacrifice" amount={-ns} color="var(--muted)" sub="pre-tax deduction"/>}
+        <div style={{borderTop:'1px solid var(--border)',marginTop:4}}/>
+        <div style={{fontSize:10,fontWeight:600,color:'var(--muted)',marginBottom:4,marginTop:8,textTransform:'uppercase',letterSpacing:'0.05em'}}>Deductions</div>
+        <SlipRow label="PAYE Income Tax" amount={-(nIT+result.taxOnBonus)} color="var(--red)" sub={`incl. ${fmt(result.taxOnBonus)} on bonus`}/>
+        <SlipRow label="National Insurance" amount={-(nNI+result.niBonus)} color="var(--red)" sub={`incl. ${fmt(result.niBonus)} on bonus`}/>
+        {(nSL+result.slBonus)>0&&<SlipRow label={`Student Loan (${inputs.studentLoan})`} amount={-(nSL+result.slBonus)} color="var(--muted)"/>}
+        {nPen>0&&<SlipRow label="Pension (Relief at Source)" amount={-nPen} color="var(--muted)"/>}
+        <SlipRow label="Net Pay" amount={nNet+result.bon-result.taxOnBonus-result.niBonus-result.slBonus} bold border color="var(--accent)"/>
+        <div style={{marginTop:8,padding:'8px 10px',background:'var(--green-bg)',borderRadius:8,fontSize:11,color:'var(--green)'}}>
+          {fmt(result.bon)} bonus → {fmt(result.bon-result.taxOnBonus-result.niBonus-result.slBonus)} net ({pct((result.bon-result.taxOnBonus-result.niBonus-result.slBonus)/result.bon)} retained)
+        </div>
+      </div>}
+    </Card>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// INPUT SECTIONS
+// ═══════════════════════════════════════════════════════════════════════════════
+function SalaryCard({ inputs, setInputs }) {
+  const set = k => v => setInputs(p=>({...p,[k]:v}));
+  const [raw, setRaw] = useState(String(inputs.salary));
+  useEffect(()=>{ setRaw(String(inputs.salary)); },[inputs.salary]);
+  const milestones = [20000,50270,100000,125140,200000];
+  return (
+    <Card>
+      <Label right={inputs.freq==='monthly'?fmtD(inputs.salary/12)+'/mo':undefined}>Annual Salary</Label>
+      <div style={{display:'flex',alignItems:'center',gap:4,marginBottom:4}}>
+        <span style={{fontSize:20,fontWeight:600,color:'var(--muted)'}}>£</span>
+        <input type="number" value={raw}
+          onChange={e=>{setRaw(e.target.value);const v=parseFloat(e.target.value);if(!isNaN(v)&&v>=0)set('salary')(v);}}
+          onBlur={()=>{const c=clamp2dp(raw);set('salary')(isNaN(parseFloat(c))?inputs.salary:parseFloat(c));setRaw(String(clamp2dp(inputs.salary)));}}
+          style={{fontSize:20,fontWeight:600,padding:'6px 8px',background:'transparent',border:'none',borderBottom:'2px solid var(--border)',borderRadius:0,width:'100%',color:'var(--text)',fontVariantNumeric:'tabular-nums',outline:'none',transition:'border-color .2s'}}
+          onFocus={e=>e.target.style.borderColor='var(--accent)'}/>
+      </div>
+      <input type="range" min={0} max={250000} step={500} value={Math.min(inputs.salary,250000)} onChange={e=>set('salary')(parseFloat(e.target.value))} style={{marginTop:8}}/>
+      <div style={{display:'flex',justifyContent:'space-between',marginTop:4}}>
+        {milestones.map(m=>(
+          <button key={m} onClick={()=>set('salary')(m)} style={{fontSize:9,background:'none',border:'none',cursor:'pointer',fontFamily:'DM Sans',fontWeight:500,padding:0,color:inputs.salary>=m?'var(--accent)':'var(--muted)',transition:'color .2s'}}>
+            {m>=1000?`${m/1000}k`:m}
+          </button>
+        ))}
+      </div>
+      <Explainer>
+        Your <strong>gross annual salary</strong> as stated in your employment contract — before any deductions. If you're paid monthly, this is your monthly gross × 12. Do not include bonuses here; use the Bonus section instead.
+      </Explainer>
+    </Card>
+  );
+}
+
+function SettingsCard({ inputs, setInputs, result, ccResult, budget }) {
+  const set = k => v => setInputs(p=>({...p,[k]:v}));
+  return (
+    <Card>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
+        <div>
+          <Label>Tax Year</Label>
+          <select value={inputs.taxYear} onChange={e=>set('taxYear')(e.target.value)}>
+            {Object.keys(TAX_YEARS).map(y=><option key={y} value={y}>{y}{TAX_YEARS[y].provisional?' (est.)':''}</option>)}
+          </select>
+        </div>
+        <div>
+          <Label>View Pay As</Label>
+          <select value={inputs.freq} onChange={e=>set('freq')(e.target.value)}>
+            <option value="annual">Annual</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+      </div>
+      <Label>Region</Label>
+      <Toggle value={inputs.region} onChange={set('region')} options={[
+        {value:'england',label:'England / Wales / NI'},
+        {value:'scotland',label:'Scotland'},
+      ]}/>
+      <Explainer>
+        The UK tax year runs <strong>6 April to 5 April</strong>. Rates, bands, and student loan thresholds differ each year — select the correct year for accurate results.<br/><br/>
+        <strong>Scotland</strong> sets its own Income Tax rates (19%–48% in 2025/26) via the Scottish Parliament. NI is unchanged across all UK nations.
+      </Explainer>
+    </Card>
+  );
+}
+
+function TaxCodeCard({ inputs, setInputs, yearData }) {
+  const set = k => v => setInputs(p=>({...p,[k]:v}));
+  const explanation = useMemo(()=>explainTaxCode(inputs.taxCode,yearData.pa),[inputs.taxCode,yearData.pa]);
+  return (
+    <Card>
+      <Label>Tax Code</Label>
+      <input type="text" value={inputs.taxCode} onChange={e=>set('taxCode')(e.target.value.toUpperCase())}
+        placeholder="1257L" maxLength={8}
+        style={{letterSpacing:'0.08em',fontWeight:600,textTransform:'uppercase',fontSize:16}}/>
+      <div style={{marginTop:8}}>
+        <InfoBox type={explanation.type}>{explanation.text}</InfoBox>
+      </div>
+      <Explainer>
+        Your tax code is issued by HMRC and tells your employer how much tax-free income you're entitled to each year. It appears on your payslip, P60, and in your Personal Tax Account (gov.uk/personal-tax-account).<br/><br/>
+        <strong>How to read it:</strong> the number × 10 = your tax-free allowance. The letter indicates your circumstances.<br/><br/>
+        <strong>Common codes:</strong><br/>
+        • <strong>1257L</strong> — standard (most employees)<br/>
+        • <strong>BR</strong> — 20% flat (second job/pension)<br/>
+        • <strong>D0</strong> — 40% flat<br/>
+        • <strong>0T</strong> — no Personal Allowance (emergency)<br/>
+        • <strong>K</strong> codes — deductions exceed allowances<br/>
+        • <strong>W1/M1</strong> — non-cumulative emergency basis
+      </Explainer>
+    </Card>
+  );
+}
+
+function PensionCard({ inputs, setInputs, yearData, result }) {
+  const set = k => v => setInputs(p=>({...p,[k]:v}));
+  const empAnnual = inputs.pensionEmpUseFixed
+    ? Math.max(0,Number(inputs.pensionEmpFixed)||0)
+    : Math.max(0,inputs.salary*((Number(inputs.pensionEmpPct)||0)/100));
+  const erAnnual = inputs.pensionErUseFixed
+    ? Math.max(0,Number(inputs.pensionErFixed)||0)
+    : Math.max(0,inputs.salary*((Number(inputs.pensionErPct)||0)/100));
+  return (
+    <Card>
+      <div style={{fontSize:11,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'var(--muted)',marginBottom:12}}>Pension Contributions</div>
+      <div style={{marginBottom:12}}>
+        <Label>Contribution Method</Label>
+        <Toggle value={inputs.pensionEmpMethod} onChange={set('pensionEmpMethod')} options={[
+          {value:'sacrifice',label:'Salary Sacrifice'},
+          {value:'relief',label:'Relief at Source'},
+        ]}/>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'auto 1fr',gap:8,alignItems:'end',marginBottom:6}}>
+        <div>
+          <Label>Employee</Label>
+          <Toggle value={inputs.pensionEmpUseFixed?'fixed':'pct'} onChange={v=>set('pensionEmpUseFixed')(v==='fixed')} small options={[{value:'pct',label:'%'},{value:'fixed',label:'£/yr'}]}/>
+        </div>
+        <div>
+          {inputs.pensionEmpUseFixed
+            ?<PoundInput value={inputs.pensionEmpFixed} onChange={set('pensionEmpFixed')} placeholder="2500" small/>
+            :<div style={{display:'flex',alignItems:'center',gap:6}}>
+              <input type="number" value={inputs.pensionEmpPct} onChange={e=>set('pensionEmpPct')(e.target.value)} onBlur={e=>set('pensionEmpPct')(clamp2dp(e.target.value))} min={0} max={100} step={0.01} style={{fontSize:14}}/>
+              <span style={{fontSize:13,color:'var(--muted)',flexShrink:0}}>%</span>
+            </div>
+          }
+        </div>
+      </div>
+      {empAnnual>0&&<div style={{fontSize:11,color:'var(--muted)',marginBottom:10}}>{fmt(empAnnual)}/yr · {fmt(empAnnual/12)}/mo</div>}
+
+      <div style={{borderTop:'1px solid var(--border)',paddingTop:10,marginBottom:6}}>
+        <div style={{display:'grid',gridTemplateColumns:'auto 1fr',gap:8,alignItems:'end'}}>
+          <div>
+            <Label>Employer</Label>
+            <Toggle value={inputs.pensionErUseFixed?'fixed':'pct'} onChange={v=>set('pensionErUseFixed')(v==='fixed')} small options={[{value:'pct',label:'%'},{value:'fixed',label:'£/yr'}]}/>
+          </div>
+          <div>
+            {inputs.pensionErUseFixed
+              ?<PoundInput value={inputs.pensionErFixed} onChange={set('pensionErFixed')} placeholder="1500" small/>
+              :<div style={{display:'flex',alignItems:'center',gap:6}}>
+                <input type="number" value={inputs.pensionErPct} onChange={e=>set('pensionErPct')(e.target.value)} onBlur={e=>set('pensionErPct')(clamp2dp(e.target.value))} min={0} max={100} step={0.01} style={{fontSize:14}}/>
+                <span style={{fontSize:13,color:'var(--muted)',flexShrink:0}}>%</span>
+              </div>
+            }
+          </div>
+        </div>
+        {erAnnual>0&&<div style={{fontSize:11,color:'var(--green)',marginTop:6}}>Employer adds {fmt(erAnnual)}/yr ({fmt(erAnnual/12)}/mo) — does not affect your take-home</div>}
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:10,paddingTop:10,borderTop:'1px solid var(--border)'}}>
+          <div>
+            <div style={{fontSize:12,fontWeight:500,color:'var(--text)'}}>Pass on employer NI saving</div>
+            <div style={{fontSize:10,color:'var(--muted)'}}>Employer adds {(yearData.erNiRate*100).toFixed(1)}% NI saving to pension pot</div>
+          </div>
+          <SwitchToggle checked={!!inputs.pensionErPassNiSaving} onChange={v=>setInputs(p=>({...p,pensionErPassNiSaving:v}))}/>
+        </div>
+      </div>
+      {inputs.bonusEnabled&&<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:10,paddingTop:10,borderTop:'1px solid var(--border)'}}>
+        <div>
+          <div style={{fontSize:12,fontWeight:500,color:'var(--text)'}}>Include bonus in pension calculation</div>
+          <div style={{fontSize:10,color:'var(--muted)'}}>Employee % applied to salary + bonus</div>
+        </div>
+        <SwitchToggle checked={!!inputs.pensionIncludeBonus} onChange={v=>setInputs(p=>({...p,pensionIncludeBonus:v}))}/>
+      </div>}
+      {result&&result.effectiveAA<(result.annualAllowance||60000)&&(
+        <div style={{marginTop:12,padding:'10px 12px',borderRadius:10,background:'var(--accent-bg)',border:'1px solid color-mix(in oklch,var(--accent) 25%,transparent)',fontSize:12,color:'var(--accent)',lineHeight:1.5}}>
+          <strong>Tapered Annual Allowance applies</strong> — adjusted income ({fmt(result.adjustedIncome)}) exceeds £260,000. Effective allowance: <strong>{fmt(result.effectiveAA)}</strong> (standard {fmt(result.annualAllowance||60000)}).
+        </div>
+      )}
+      {result&&result.aaExcess>0&&(
+        <div style={{marginTop:8,padding:'10px 12px',borderRadius:10,background:'color-mix(in oklch,var(--red) 10%,var(--surface2))',border:'1px solid color-mix(in oklch,var(--red) 25%,transparent)',fontSize:12,color:'var(--red)',lineHeight:1.5}}>
+          <strong>Annual Allowance exceeded by {fmt(result.aaExcess)}</strong> — total pension input ({fmt(result.totalPensionInput)}) exceeds your effective allowance of {fmt(result.effectiveAA)}. You may face an Annual Allowance charge on the excess.
+        </div>
+      )}
+      <Explainer>
+        <strong>Salary Sacrifice</strong> — your gross pay is reduced by your pension contribution before Income Tax and NI are calculated. You save tax AND NI on every pound sacrificed. Basic rate taxpayers save 28% (20%+8%), higher rate taxpayers save 48% (40%+8%). Your employer may also pass on their {(yearData.erNiRate*100).toFixed(1)}% NI saving.<br/><br/>
+        <strong>Relief at Source</strong> — you contribute from your net (after-tax) pay. The pension provider automatically claims 20% basic rate tax relief from HMRC. Higher rate (40%) or additional rate (45%) taxpayers can claim the extra 20–25% via Self Assessment. No NI saving with this method.<br/><br/>
+        <strong>Employer contribution</strong> is added on top of your salary and never reduces your take-home. The statutory minimum (auto-enrolment) is 3%.<br/><br/>
+        <strong>Annual Allowance</strong> — the maximum total pension input (employee + employer) in a tax year is £60,000. If your adjusted income exceeds £260,000, the allowance tapers by £1 for every £2 above that threshold, down to a minimum of £10,000.
+      </Explainer>
+    </Card>
+  );
+}
+
+function BonusCard({ inputs, setInputs }) {
+  const set = k => v => setInputs(p=>({...p,[k]:v}));
+  return (
+    <Card>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:inputs.bonusEnabled?12:0}}>
+        <div style={{fontSize:11,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'var(--muted)'}}>Bonus</div>
+        <SwitchToggle checked={inputs.bonusEnabled} onChange={set('bonusEnabled')}/>
+      </div>
+      {inputs.bonusEnabled&&<div style={{animation:'fadeUp .2s ease both'}}>
+        <Label>Annual Bonus Amount</Label>
+        <PoundInput value={inputs.bonus} onChange={set('bonus')} placeholder="5000"/>
+        {Number(inputs.bonus)>0&&<div style={{fontSize:11,color:'var(--muted)',marginTop:6}}>Paid in one lump sum · switch to Monthly view to see the bonus month payslip</div>}
+        <Explainer>
+          Bonuses are taxed as regular income in the pay period they're received — usually at your <strong>marginal rate</strong> (the rate on your top slice of income). A £5,000 bonus for a 40% taxpayer yields ~£2,600 after tax and NI.<br/><br/>
+          The calculator shows a dedicated <em>Bonus Month</em> payslip in the Monthly Payslip section, showing the combined effect on that month's net pay.
+        </Explainer>
+      </div>}
+      {!inputs.bonusEnabled&&<div style={{fontSize:11,color:'var(--muted)',marginTop:4}}>Toggle to add an annual bonus</div>}
+    </Card>
+  );
+}
+
+function BenefitsCard({ inputs, setInputs, yearData }) {
+  const set = k => v => setInputs(p=>({...p,[k]:v}));
+  const totalMonthly = (Number(inputs.benMedical)||0)+(Number(inputs.benDental)||0)+(Number(inputs.benOther)||0);
+  return (
+    <Card>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:inputs.benEnabled?12:0}}>
+        <div style={{fontSize:11,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'var(--muted)'}}>Taxable Benefits (P11D)</div>
+        <SwitchToggle checked={inputs.benEnabled} onChange={v=>setInputs(p=>({...p,benEnabled:v,benMedical:v?p.benMedical:0,benDental:v?p.benDental:0,benOther:v?p.benOther:0}))}/>
+      </div>
+      {inputs.benEnabled&&<div style={{animation:'fadeUp .2s ease both'}}>
+        <div style={{display:'grid',gridTemplateColumns:'1fr',gap:8,marginBottom:8}}>
+          <div>
+            <Label>Private Medical (per month)</Label>
+            <PoundInput value={inputs.benMedical} onChange={set('benMedical')} placeholder="100" suffix="/mo"/>
+          </div>
+          <div>
+            <Label>Dental (per month)</Label>
+            <PoundInput value={inputs.benDental} onChange={set('benDental')} placeholder="20" suffix="/mo"/>
+          </div>
+          <div>
+            <Label>Other benefits (per month)</Label>
+            <PoundInput value={inputs.benOther} onChange={set('benOther')} placeholder="0" suffix="/mo"/>
+          </div>
+        </div>
+        {totalMonthly>0&&<div style={{fontSize:11,color:'var(--muted)',marginTop:2}}>Total P11D: {fmt(totalMonthly)}/mo · {fmt(totalMonthly*12)}/yr</div>}
+        <Explainer>
+          <strong>Benefits in Kind (P11D)</strong> are non-cash perks from your employer. HMRC adds their annual value to your taxable income so you pay Income Tax on them at your marginal rate.<br/><br/>
+          You do <strong>not</strong> pay employee NI on P11D benefits. However, your employer pays <strong>Class 1A NI ({(yearData.erNiRate*100).toFixed(1)}%)</strong> on the benefit value — this doesn't affect your take-home but is a cost to them.<br/><br/>
+          Common examples: private medical insurance (~£700–£1,400/yr), dental cover, interest-free loans over £10,000.
+        </Explainer>
+      </div>}
+      {!inputs.benEnabled&&<div style={{fontSize:11,color:'var(--muted)',marginTop:4}}>Toggle to add employer benefits (P11D)</div>}
+    </Card>
+  );
+}
+
+function EVCard({ inputs, setInputs, yearData, result }) {
+  const set = k => v => setInputs(p=>({...p,[k]:v}));
+  const bikPct = inputs.evIsEV ? yearData.evBikPct : (Number(inputs.evManualBikPct)||0)/100;
+  const bikValue = inputs.evEnabled ? Math.max(0,(Number(inputs.evP11d)||0)*bikPct) : 0;
+  return (
+    <Card>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:inputs.evEnabled?12:0}}>
+        <div style={{fontSize:11,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'var(--muted)'}}>EV / Company Car Sacrifice</div>
+        <SwitchToggle checked={inputs.evEnabled} onChange={set('evEnabled')}/>
+      </div>
+      {inputs.evEnabled&&<div style={{animation:'fadeUp .2s ease both'}}>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
+          <div>
+            <Label>Monthly Sacrifice</Label>
+            <PoundInput value={inputs.evMonthly} onChange={set('evMonthly')} placeholder="350" suffix="/mo"/>
+          </div>
+          <div>
+            <Label>Car P11D Value</Label>
+            <PoundInput value={inputs.evP11d} onChange={set('evP11d')} placeholder="35000"/>
+          </div>
+        </div>
+        <div style={{marginBottom:inputs.evIsEV?10:6}}>
+          <Label>Vehicle Type</Label>
+          <Toggle value={inputs.evIsEV?'ev':'other'} onChange={v=>set('evIsEV')(v==='ev')} options={[
+            {value:'ev',label:`Pure EV (${(yearData.evBikPct*100).toFixed(0)}% BIK)`},
+            {value:'other',label:'PHEV / Other'},
+          ]}/>
+        </div>
+        {!inputs.evIsEV&&<div style={{marginBottom:10}}>
+          <Label>Manual BIK %</Label>
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <input type="number" value={inputs.evManualBikPct} onChange={e=>set('evManualBikPct')(e.target.value)} onBlur={e=>set('evManualBikPct')(clamp2dp(e.target.value))} min={0} max={37} step={0.01} style={{fontSize:14}}/>
+            <span style={{fontSize:13,color:'var(--muted)',flexShrink:0}}>%</span>
+          </div>
+        </div>}
+
+        {bikValue>0&&<div style={{background:'var(--surface2)',borderRadius:10,padding:12,border:'1px solid var(--border)',fontSize:12,marginBottom:6}}>
+          <div style={{fontWeight:700,marginBottom:8,color:'var(--text)'}}>BIK Cost & Savings</div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:'4px 8px',color:'var(--muted)'}}>
+            <span>BIK rate ({inputs.taxYear})</span><span style={{textAlign:'right',fontWeight:600,color:'var(--text)'}}>{pct(bikPct)}</span>
+            <span>Annual BIK value</span><span style={{textAlign:'right',fontWeight:600,color:'var(--text)'}}>{fmt(bikValue)}</span>
+            <span>Income tax on BIK</span><span style={{textAlign:'right',fontWeight:600,color:'var(--red)'}}>{fmt(-result.evBikTax)}</span>
+            <div style={{borderTop:'1px dashed var(--border)',gridColumn:'1/-1',margin:'4px 0'}}/>
+            <span>Annual sacrifice cost</span><span style={{textAlign:'right',fontWeight:600,color:'var(--text)'}}>{fmt(-result.evSacAnnual)}</span>
+            <span>Income tax saved</span><span style={{textAlign:'right',fontWeight:600,color:'var(--green)'}}>{fmt(result.evTaxSaving)}</span>
+            <span>NI saved</span><span style={{textAlign:'right',fontWeight:600,color:'var(--green)'}}>{fmt(result.evNiSaving)}</span>
+            <div style={{borderTop:'1px solid var(--border)',gridColumn:'1/-1',margin:'4px 0'}}/>
+            <span style={{fontWeight:700,color:'var(--text)'}}>Net annual cost</span><span style={{textAlign:'right',fontWeight:700,color:'var(--accent)'}}>{fmt(result.evNetCost)}</span>
+            <span style={{color:'var(--muted)'}}>Net monthly cost</span><span style={{textAlign:'right',fontWeight:600,color:'var(--accent)'}}>{fmt(result.evNetCost/12)}/mo</span>
+          </div>
+        </div>}
+
+        <Explainer>
+          <strong>EV salary sacrifice</strong> lets you exchange salary for a company-leased electric vehicle. The sacrifice reduces your gross pay, saving Income Tax and NI on that amount.<br/><br/>
+          You pay <strong>Benefit in Kind (BIK) tax</strong> on the car's P11D value at the applicable percentage. For pure EVs in {inputs.taxYear}, this is just {pct(yearData.evBikPct)} — making it extremely tax-efficient vs. a conventional car (up to 37% BIK).<br/><br/>
+          <strong>P11D value</strong> = manufacturer's list price including VAT and factory-fit accessories (not the lease price or dealer discount).<br/><br/>
+          No employee NI on BIK. Your employer pays Class 1A NI ({(yearData.erNiRate*100).toFixed(1)}%) on the BIK value instead.
+        </Explainer>
+      </div>}
+      {!inputs.evEnabled&&<div style={{fontSize:11,color:'var(--muted)',marginTop:4}}>Toggle to calculate EV / company car sacrifice and BIK tax</div>}
+    </Card>
+  );
+}
+
+function OtherSacCard({ inputs, setInputs }) {
+  const set = k => v => setInputs(p=>({...p,[k]:v}));
+  const annual = inputs.otherSacEnabled ? Math.max(0,(Number(inputs.otherSacMonthly)||0)*12) : 0;
+  return (
+    <Card>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:inputs.otherSacEnabled?12:0}}>
+        <div style={{fontSize:11,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'var(--muted)'}}>Other Salary Sacrifice</div>
+        <SwitchToggle checked={inputs.otherSacEnabled} onChange={set('otherSacEnabled')}/>
+      </div>
+      {inputs.otherSacEnabled&&<div style={{animation:'fadeUp .2s ease both'}}>
+        <Label>Monthly Sacrifice Amount</Label>
+        <PoundInput value={inputs.otherSacMonthly} onChange={set('otherSacMonthly')} placeholder="50" suffix="/mo"/>
+        {annual>0&&<div style={{fontSize:11,color:'var(--muted)',marginTop:6}}>{fmt(annual)}/yr · e.g. cycle to work, childcare, holiday purchase, tech scheme</div>}
+        <Explainer>
+          Other salary sacrifice schemes (Cycle to Work, childcare vouchers, holiday buy, tech/phone schemes) reduce your gross pay before Income Tax and NI — saving you both. The monthly figure here is annualised × 12. These schemes must be arranged through your employer.
+        </Explainer>
+      </div>}
+      {!inputs.otherSacEnabled&&<div style={{fontSize:11,color:'var(--muted)',marginTop:4}}>Toggle to add other salary sacrifice (cycle to work, childcare etc.)</div>}
+    </Card>
+  );
+}
+
+function StudentLoanCard({ inputs, setInputs, yearData }) {
+  const set = k => v => setInputs(p=>({...p,[k]:v}));
+  const planData = inputs.studentLoan!=='None'&&yearData.studentLoan[inputs.studentLoan];
+  return (
+    <Card>
+      <Label>Student Loan</Label>
+      <select value={inputs.studentLoan} onChange={e=>set('studentLoan')(e.target.value)}>
+        <option value="None">None</option>
+        {Object.keys(yearData.studentLoan).map(p=><option key={p} value={p}>{p}</option>)}
+      </select>
+      {planData&&<div style={{fontSize:11,color:'var(--muted)',marginTop:6}}>
+        {(planData.rate*100).toFixed(0)}% repayment on earnings above {fmt(planData.threshold)} · {inputs.taxYear}
+      </div>}
+      <Explainer>
+        Student loan repayments are collected by HMRC via PAYE once your income exceeds the plan threshold. They're taken on your gross salary <em>before</em> sacrifice deductions.<br/><br/>
+        <strong>Plan 1</strong>: pre-2012 starters or Scottish (threshold ~£25k)<br/>
+        <strong>Plan 2</strong>: 2012–2023 English/Welsh starters (threshold ~£27k)<br/>
+        <strong>Plan 4</strong>: Scottish students post-2007 (threshold ~£31k)<br/>
+        <strong>Plan 5</strong>: new students from Aug 2023 (threshold ~£25k)<br/>
+        <strong>Postgrad</strong>: postgraduate loan (threshold £21k, rate 6%)
+      </Explainer>
+    </Card>
+  );
+}
+
+function AllowancesCard({ inputs, setInputs }) {
+  const set = k => v => setInputs(p=>({...p,[k]:v}));
+  const isMonthly = inputs.allowancesFreq === 'monthly';
+  const suffix = isMonthly ? '/mo' : '/yr';
+  const rawTotal = (Number(inputs.allowanceCar)||0) + (Number(inputs.allowanceOnCall)||0) + (Number(inputs.allowanceOther)||0);
+  const annualTotal = inputs.allowancesEnabled ? rawTotal * (isMonthly ? 12 : 1) : 0;
+  return (
+    <Card>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:inputs.allowancesEnabled?12:0}}>
+        <div style={{fontSize:11,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'var(--muted)'}}>Allowances & Additional Pay</div>
+        <SwitchToggle checked={!!inputs.allowancesEnabled} onChange={v=>setInputs(p=>({...p,allowancesEnabled:v}))}/>
+      </div>
+      {inputs.allowancesEnabled&&<div style={{animation:'fadeUp .2s ease both'}}>
+        <div style={{marginBottom:10}}>
+          <Label>Input amounts as</Label>
+          <Toggle value={inputs.allowancesFreq||'annual'} onChange={set('allowancesFreq')} options={[
+            {value:'annual', label:'Annual'},
+            {value:'monthly', label:'Monthly'},
+          ]}/>
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:8}}>
+          <div>
+            <Label>Car / Travel Allowance</Label>
+            <PoundInput value={inputs.allowanceCar} onChange={set('allowanceCar')} placeholder="0" suffix={suffix}/>
+          </div>
+          <div>
+            <Label>On-Call / Shift Allowance</Label>
+            <PoundInput value={inputs.allowanceOnCall} onChange={set('allowanceOnCall')} placeholder="0" suffix={suffix}/>
+          </div>
+          <div>
+            <Label>Other Allowance</Label>
+            <PoundInput value={inputs.allowanceOther} onChange={set('allowanceOther')} placeholder="0" suffix={suffix}/>
+          </div>
+        </div>
+        {annualTotal>0&&<div style={{fontSize:11,color:'var(--muted)',marginBottom:8}}>
+          Total: {fmt(annualTotal)}/yr · {fmt(annualTotal/12)}/mo · subject to Income Tax, NI & Student Loan
+        </div>}
+        <Explainer>
+          Allowances paid <strong>through payroll</strong> are treated as employment income — they're subject to Income Tax, employee NI, and student loan repayments, just like your salary.<br/><br/>
+          They are <strong>excluded from your pension</strong> calculation (most schemes base contributions on basic salary only).<br/><br/>
+          Common examples: cash car allowance, travel stipend, on-call or shift premium, remote working allowance, London weighting.
+        </Explainer>
+      </div>}
+      {!inputs.allowancesEnabled&&<div style={{fontSize:11,color:'var(--muted)',marginTop:4}}>Toggle to add payroll allowances subject to tax and NI</div>}
+    </Card>
+  );
+}
+
+function OtherIncomeCard({ inputs, setInputs }) {
+  const set = k => v => setInputs(p=>({...p,[k]:v}));
+  const total = inputs.otherIncomeEnabled
+    ? (Number(inputs.otherIncomeRental)||0)+(Number(inputs.otherIncomeSavings)||0)+(Number(inputs.otherIncomeDividends)||0)+(Number(inputs.otherIncomeOther)||0)
+    : 0;
+  return (
+    <Card>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:inputs.otherIncomeEnabled?12:0}}>
+        <div style={{fontSize:11,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'var(--muted)'}}>Other Taxable Income</div>
+        <SwitchToggle checked={!!inputs.otherIncomeEnabled} onChange={v=>setInputs(p=>({...p,otherIncomeEnabled:v}))}/>
+      </div>
+      {inputs.otherIncomeEnabled&&<div style={{animation:'fadeUp .2s ease both'}}>
+        <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:8}}>
+          <div>
+            <Label>Rental / Property Income (annual)</Label>
+            <PoundInput value={inputs.otherIncomeRental} onChange={set('otherIncomeRental')} placeholder="0"/>
+          </div>
+          <div>
+            <Label>Savings & Interest (annual)</Label>
+            <PoundInput value={inputs.otherIncomeSavings} onChange={set('otherIncomeSavings')} placeholder="0"/>
+          </div>
+          <div>
+            <Label>Dividend Income (annual)</Label>
+            <PoundInput value={inputs.otherIncomeDividends} onChange={set('otherIncomeDividends')} placeholder="0"/>
+          </div>
+          <div>
+            <Label>Other Taxable Income (annual)</Label>
+            <PoundInput value={inputs.otherIncomeOther} onChange={set('otherIncomeOther')} placeholder="0"/>
+          </div>
+        </div>
+        {total>0&&<div style={{fontSize:11,color:'var(--muted)',marginBottom:8}}>Total: {fmt(total)}/yr · {fmt(total/12)}/mo · taxed at marginal rate, no employee NI or pension</div>}
+        <Explainer>
+          This income is <strong>added to your taxable income</strong> for Income Tax purposes but does <strong>not</strong> affect your pension contributions, employee NI, or student loan calculations — those remain salary-based.<br/><br/>
+          <strong>Rental / Property</strong>: net rental profit after allowable expenses and the £1,000 property allowance.<br/>
+          <strong>Savings & Interest</strong>: bank/building society interest above your Personal Savings Allowance (£500–£1,000 depending on tax band).<br/>
+          <strong>Dividends</strong>: dividends above the £500 annual allowance (2024/25+), taxed at 8.75% / 33.75% / 39.35%.<br/>
+          <strong>Note</strong>: this is an estimate — dividend and savings income have their own rates which a full Self Assessment would calculate precisely.
+        </Explainer>
+      </div>}
+      {!inputs.otherIncomeEnabled&&<div style={{fontSize:11,color:'var(--muted)',marginTop:4}}>Toggle to add rental, savings, dividend or other taxable income</div>}
+    </Card>
+  );
+}
+
+function AdjustmentRow({ item, onUpdate, onRemove }) {
+  const [label, setLabel]   = useState(item.label);
+  const [amount, setAmount] = useState(item.amount);
+  return (
+    <div style={{display:'grid',gridTemplateColumns:'1fr 120px 28px',gap:6,alignItems:'center',marginBottom:6}}>
+      <input type="text" value={label}
+        onChange={e=>setLabel(e.target.value)}
+        onBlur={()=>onUpdate(item.id,'label',label)}
+        placeholder="Description" style={{fontSize:12}}/>
+      <div style={{position:'relative'}}>
+        <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',fontSize:13,fontWeight:600,color:'var(--muted)',pointerEvents:'none'}}>£</span>
+        <input type="number" step="0.01" value={amount}
+          onChange={e=>setAmount(e.target.value)}
+          onBlur={()=>{const v=clamp2dp(amount);setAmount(v);onUpdate(item.id,'amount',v);}}
+          placeholder="0"
+          style={{paddingLeft:22,paddingRight:38,fontSize:13}}/>
+        <span style={{position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',fontSize:11,color:'var(--muted)',pointerEvents:'none'}}>/mo</span>
+      </div>
+      <button onClick={()=>onRemove(item.id)}
+        style={{width:28,height:28,borderRadius:6,border:'1.5px solid var(--border)',background:'var(--surface2)',cursor:'pointer',color:'var(--muted)',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}}>×</button>
+    </div>
+  );
+}
+
+function AdjustmentsCard({ inputs, setInputs }) {
+  const addItem = key => setInputs(p=>({...p,[key]:[...(p[key]||[]),{id:Date.now()+'',label:'',amount:''}]}));
+  const updItem = (key,id,field,val) => setInputs(p=>({...p,[key]:(p[key]||[]).map(x=>x.id===id?{...x,[field]:val}:x)}));
+  const remItem = (key,id) => setInputs(p=>({...p,[key]:(p[key]||[]).filter(x=>x.id!==id)}));
+  const hasAny = (inputs.netDeductions||[]).length>0||(inputs.netAdditions||[]).length>0;
+
+  return (
+    <Card>
+      <div style={{fontSize:11,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'var(--muted)',marginBottom:hasAny?12:4}}>Net Pay Adjustments</div>
+      {!hasAny&&<div style={{fontSize:11,color:'var(--muted)'}}>Add post-tax deductions or additions that affect your final take-home</div>}
+
+      {(inputs.netDeductions||[]).length>0&&<>
+        <div style={{fontSize:11,fontWeight:600,color:'var(--red)',marginBottom:6}}>Deductions</div>
+        {(inputs.netDeductions||[]).map(item=>(
+          <AdjustmentRow key={item.id} item={item}
+            onUpdate={(id,field,val)=>updItem('netDeductions',id,field,val)}
+            onRemove={id=>remItem('netDeductions',id)}/>
+        ))}
+      </>}
+      {(inputs.netAdditions||[]).length>0&&<>
+        <div style={{fontSize:11,fontWeight:600,color:'var(--green)',marginBottom:6,marginTop:(inputs.netDeductions||[]).length>0?10:0}}>Additions</div>
+        {(inputs.netAdditions||[]).map(item=>(
+          <AdjustmentRow key={item.id} item={item}
+            onUpdate={(id,field,val)=>updItem('netAdditions',id,field,val)}
+            onRemove={id=>remItem('netAdditions',id)}/>
+        ))}
+      </>}
+
+      <div style={{display:'flex',gap:8,marginTop:10}}>
+        <button onClick={()=>addItem('netDeductions')}
+          style={{flex:1,padding:'7px 0',borderRadius:8,border:'1.5px dashed var(--border)',background:'transparent',cursor:'pointer',fontSize:11,color:'var(--red)',fontWeight:600}}>
+          + Deduction
+        </button>
+        <button onClick={()=>addItem('netAdditions')}
+          style={{flex:1,padding:'7px 0',borderRadius:8,border:'1.5px dashed var(--border)',background:'transparent',cursor:'pointer',fontSize:11,color:'var(--green)',fontWeight:600}}>
+          + Addition
+        </button>
+      </div>
+      <Explainer>
+        These adjustments are applied <strong>after</strong> all tax, NI, and pension calculations — they don't affect your tax position.<br/><br/>
+        Common deductions: season ticket loan, court orders, union membership, share scheme contributions, charity payroll giving.<br/>
+        Common additions: expense reimbursements, mileage payments, net of tax bonuses already accounted for separately.
+      </Explainer>
+    </Card>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TAKE-HOME HERO
+// ═══════════════════════════════════════════════════════════════════════════════
+function TakeHomeHero({ result, freq }) {
+  return (
+    <div style={{background:'var(--accent)',borderRadius:16,padding:'22px 20px',animation:'fadeUp .4s ease both'}}>
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:'rgba(255,255,255,0.7)',marginBottom:4}}>
+        Take-Home Pay {freq==='monthly'?'(Monthly)':'(Annual)'}
+      </div>
+      <div style={{fontSize:36,fontWeight:700,color:'#fff',fontVariantNumeric:'tabular-nums',lineHeight:1}}>
+        <AnimNum value={pp(result.finalTakeHome,freq)}/>
+      </div>
+      <div style={{fontSize:12,color:'rgba(255,255,255,0.6)',marginTop:4}}>
+        {freq==='monthly'?`${fmt(result.finalTakeHome)} per year · ${fmt(result.finalTakeHome/12)} per month`:`${fmt(result.finalTakeHome/12)} per month`}
+      </div>
+      <div style={{display:'flex',gap:12,marginTop:14,paddingTop:12,borderTop:'1px solid rgba(255,255,255,0.18)',flexWrap:'wrap'}}>
+        {[
+          {label:'Effective Rate', value:pct(result.effectiveRate)},
+          {label:'Marginal Rate',  value:pct(result.marginalRate)},
+          {label:'Income Tax',     value:fmt(pp(result.incomeTax,freq))},
+          {label:'Nat. Insurance', value:fmt(pp(result.niAmount,freq))},
+        ].map((item,i)=>(
+          <div key={i} style={{flex:'1 1 auto',minWidth:70}}>
+            <div style={{fontSize:9,color:'rgba(255,255,255,0.6)',fontWeight:600,letterSpacing:'.08em',textTransform:'uppercase'}}>{item.label}</div>
+            <div style={{fontSize:15,fontWeight:700,color:'#fff',marginTop:2}}>{item.value}</div>
+          </div>
+        ))}
+      </div>
+      {result.bon>0&&(
+        <div style={{marginTop:10,paddingTop:8,borderTop:'1px solid rgba(255,255,255,0.15)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <span style={{fontSize:11,color:'rgba(255,255,255,0.65)'}}>Incl. bonus ({fmt(result.bon)})</span>
+          <span style={{fontSize:14,fontWeight:700,color:'rgba(255,255,255,0.9)'}}>{fmt(pp(result.finalTakeHomeBonus,freq))}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CHILDCARE PAGE
+// ═══════════════════════════════════════════════════════════════════════════════
+function TabBar({ page, setPage, ani }) {
+  const atRisk = ani > 100000;
+  return (
+    <div className="tab-bar">
+      <button className={`tab-btn${page==='calculator'?' active':''}`} onClick={()=>setPage('calculator')}>Calculator</button>
+      <button className={`tab-btn${page==='comparison'?' active':''}`} onClick={()=>setPage('comparison')}>Comparison</button>
+      <button className={`tab-btn${page==='childcare'?' active':''}`} onClick={()=>setPage('childcare')}
+        title={atRisk?'Childcare benefits at risk — ANI exceeds £100k':'Childcare planner'}>
+        Childcare Planner{atRisk&&<span className="tab-badge"/>}
+      </button>
+      <button className={`tab-btn${page==='budget'?' active':''}`} onClick={()=>setPage('budget')}>Budget Planner</button>
+    </div>
+  );
+}
+
+function AniSummaryCard({ ccResult }) {
+  const { ani, eligible, aniGap, extraSacPct, totalPensionPct, newTotalPensionInput, goesOverAllowance, annualAllowance, pensionBaseName } = ccResult;
+  const pctUsed = Math.min(1, ani / 100000);
+  const color = eligible ? 'var(--green)' : 'var(--red)';
+  return (
+    <Card>
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)',marginBottom:8}}>Adjusted Net Income</div>
+      <div style={{fontSize:28,fontWeight:700,color,fontVariantNumeric:'tabular-nums'}}><AnimNum value={ani}/></div>
+      <div style={{height:6,borderRadius:99,background:'var(--border)',marginTop:10,overflow:'hidden'}}>
+        <div style={{height:'100%',width:`${pctUsed*100}%`,background:color,borderRadius:99,transition:'width .4s'}}/>
+      </div>
+      <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'var(--muted)',marginTop:4}}>
+        <span>£0</span><span>£100,000</span>
+      </div>
+      <div style={{marginTop:10,padding:'8px 10px',borderRadius:8,
+        background: eligible ? 'var(--green-bg)' : 'color-mix(in oklch,var(--red) 8%,var(--surface2))',
+        border: `1px solid ${eligible ? 'color-mix(in oklch,var(--green) 30%,transparent)' : 'color-mix(in oklch,var(--red) 25%,transparent)'}`,
+        fontSize:12, color: eligible ? 'var(--green)' : 'var(--red)',
+      }}>
+        {eligible
+          ? `ANI is ${fmt(100000-ani)} below the £100k threshold. Childcare benefits are safe.`
+          : (
+            <div>
+              ANI exceeds £100k by {fmt(aniGap)}. Tax-Free Childcare and 30 free hours are being lost.<br/><br/>
+              To go below the threshold, you would need to increase your pension contributions by an additional <strong>{extraSacPct.toFixed(1)}%</strong> of your {pensionBaseName} for a total of <strong>{totalPensionPct.toFixed(1)}%</strong>.
+              {goesOverAllowance && (
+                <div style={{marginTop:8,padding:'6px 8px',background:'color-mix(in oklch,var(--red) 15%,transparent)',borderRadius:6,border:'1px solid color-mix(in oklch,var(--red) 30%,transparent)',color:'var(--red)'}}>
+                  <strong>Warning:</strong> This brings your total annual pension contributions to {fmt(newTotalPensionInput)}, which exceeds the annual allowance of {fmt(annualAllowance)}.
+                </div>
+              )}
+            </div>
+          )
+        }
+      </div>
+      <div style={{fontSize:11,color:'var(--muted)',marginTop:8}}>ANI = taxable income less personal pension contributions. Adjust salary sacrifice in the Calculator tab to change this.</div>
+    </Card>
+  );
+}
+
+function ChildrenCard({ inputs, setInputs }) {
+  const set = k => v => setInputs(p=>({...p,[k]:v}));
+  const count = Math.min(4, Math.max(1, Number(inputs.childrenCount)||1));
+  const AGE_OPTIONS = [{value:'0-8m',label:'Under 9m'},{value:'9m-2y',label:'9m–2 yrs'},{value:'3-4',label:'3–4 yrs'},{value:'5+',label:'5+ yrs'}];
+  return (
+    <Card>
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)',marginBottom:12}}>Children</div>
+      <Label>Number of children</Label>
+      <Toggle value={String(count)} onChange={v=>set('childrenCount')(Number(v))}
+        options={[1,2,3,4].map(n=>({value:String(n),label:String(n)}))}/>
+      <div style={{marginTop:14,display:'flex',flexDirection:'column',gap:10}}>
+        {Array.from({length:count},(_,i)=>i+1).map(i=>(
+          <div key={i} style={{padding:'12px',borderRadius:10,background:'var(--surface2)',border:'1px solid var(--border)'}}>
+            <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',marginBottom:8,textTransform:'uppercase',letterSpacing:'0.07em'}}>Child {i}</div>
+            <Label>Age band</Label>
+            <Toggle value={inputs[`child${i}Age`]||'0-2'} onChange={set(`child${i}Age`)} options={AGE_OPTIONS}/>
+            <div style={{marginTop:8,display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+              <div>
+                <Label>Full nursery fee</Label>
+                <PoundInput value={inputs[`child${i}MonthlyCost`]||0} onChange={set(`child${i}MonthlyCost`)} suffix="/mo" small/>
+                <div style={{fontSize:10,color:'var(--muted)',marginTop:3}}>Total monthly fee without any funding</div>
+              </div>
+              <div>
+                <Label>Funded nursery fee</Label>
+                <PoundInput value={inputs[`child${i}MonthlyFundedCost`]||0} onChange={set(`child${i}MonthlyFundedCost`)} suffix="/mo" small/>
+                <div style={{fontSize:10,color:'var(--muted)',marginTop:3}}>Reduced fee with free hours applied</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function LiquidityComparisonCard({ ccResult }) {
+  const { eligible, childDetails, currentTotalChildcareCost, optimisedTotalChildcareCost,
+    currentTakeHome, optimisedTakeHome, currentLiquidity, optimisedLiquidity, netBenefit, worthIt, extraSacrificeNeeded } = ccResult;
+
+  const Row = ({label, a, b, highlight}) => (
+    <div style={{display:'grid',gridTemplateColumns:'1fr 90px 90px',gap:8,fontSize:12,padding:'6px 0',borderBottom:'1px solid var(--border)'}}>
+      <div style={{color:'var(--muted)'}}>{label}</div>
+      <div style={{textAlign:'right',fontWeight:600,color:highlight?'var(--red)':'var(--text)'}}>{fmt(a)}</div>
+      <div style={{textAlign:'right',fontWeight:600,color:highlight?'var(--green)':'var(--text)'}}>{fmt(b)}</div>
+    </div>
+  );
+
+  return (
+    <Card>
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)',marginBottom:12}}>Day-to-day Liquidity</div>
+      
+      {!eligible && <div style={{padding:'10px 12px',borderRadius:8,background:'color-mix(in oklch,var(--red) 8%,var(--surface2))',border:'1px solid color-mix(in oklch,var(--red) 25%,transparent)',fontSize:12,color:'var(--red)',marginBottom:14}}>
+        Your ANI exceeds £100,000. Here's what happens if you do nothing vs if you sacrifice {fmt(extraSacrificeNeeded)} extra into your pension to retain childcare funding.
+      </div>}
+
+      {eligible && <div style={{padding:'10px 12px',borderRadius:8,background:'var(--green-bg)',border:'1px solid color-mix(in oklch,var(--green) 30%,transparent)',fontSize:12,color:'var(--green)',marginBottom:14}}>
+        Your ANI is below £100,000. You are safely retaining all your childcare benefits!
+      </div>}
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 90px 90px',gap:8,fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.05em',color:'var(--muted)',paddingBottom:6,borderBottom:'1px solid var(--border)'}}>
+        <div>Annual Impact</div>
+        <div style={{textAlign:'right'}}>Current</div>
+        <div style={{textAlign:'right'}}>Optimised</div>
+      </div>
+
+      <Row label="Take-Home Pay" a={currentTakeHome} b={eligible ? currentTakeHome : optimisedTakeHome} />
+      <div style={{display:'grid',gridTemplateColumns:'1fr 90px 90px',gap:8,fontSize:12,padding:'6px 0',borderBottom:'1px dashed var(--border)'}}>
+        <div style={{color:'var(--muted)'}}>Nursery Base Fee</div>
+        <div style={{textAlign:'right',fontWeight:600,color:'var(--text)'}}>{fmt(-(currentTotalChildcareCost + ccResult.currentTotalTfc))}</div>
+        <div style={{textAlign:'right',fontWeight:600,color:'var(--text)'}}>{fmt(-(eligible ? currentTotalChildcareCost + ccResult.currentTotalTfc : optimisedTotalChildcareCost + ccResult.optTotalTfc))}</div>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 90px 90px',gap:8,fontSize:12,padding:'6px 0',borderBottom:'1px solid var(--border)'}}>
+        <div style={{color:'var(--muted)'}}>Tax-Free Childcare</div>
+        <div style={{textAlign:'right',fontWeight:600,color:'var(--green)'}}>+{fmt(ccResult.currentTotalTfc)}</div>
+        <div style={{textAlign:'right',fontWeight:600,color:'var(--green)'}}>+{fmt(eligible ? ccResult.currentTotalTfc : ccResult.optTotalTfc)}</div>
+      </div>
+      <Row label="Final Nursery Bill" a={-currentTotalChildcareCost} b={eligible ? -currentTotalChildcareCost : -optimisedTotalChildcareCost} highlight />
+      <div style={{display:'grid',gridTemplateColumns:'1fr 90px 90px',gap:8,fontSize:13,fontWeight:700,padding:'8px 0',background:'var(--surface2)',borderRadius:6,marginTop:4,paddingLeft:8,paddingRight:4}}>
+        <div style={{color:'var(--text)'}}>Net Cash in Pocket</div>
+        <div style={{textAlign:'right',color:'var(--text)'}}>{fmt(currentLiquidity)}</div>
+        <div style={{textAlign:'right',color:'var(--text)'}}>{fmt(eligible ? currentLiquidity : optimisedLiquidity)}</div>
+      </div>
+
+      {!eligible && (()=>{
+        const isWorthIt = netBenefit >= 0;
+        const isBorderline = netBenefit < 0 && netBenefit >= -6000;
+        
+        let stateBg, stateBorder, stateColor;
+        if (isWorthIt) {
+          stateBg = 'var(--green-bg)';
+          stateBorder = 'color-mix(in oklch,var(--green) 30%,transparent)';
+          stateColor = 'var(--green)';
+        } else if (isBorderline) {
+          stateBg = 'var(--accent-bg)';
+          stateBorder = 'color-mix(in oklch,var(--accent) 25%,transparent)';
+          stateColor = 'var(--accent)';
+        } else {
+          stateBg = 'color-mix(in oklch,var(--red) 8%,var(--surface2))';
+          stateBorder = 'color-mix(in oklch,var(--red) 25%,transparent)';
+          stateColor = 'var(--red)';
+        }
+
+        return (
+          <div style={{marginTop:12,padding:'12px',borderRadius:10, background: stateBg, border: `1px solid ${stateBorder}`, fontSize:12, color: stateColor, lineHeight:1.5 }}>
+            {isWorthIt && <span><strong>Worth it!</strong> By sacrificing {fmt(extraSacrificeNeeded)} into your pension, you actually end up with <strong>{fmt(netBenefit)}/yr ({fmt(netBenefit/12)}/mo) MORE</strong> cash in your pocket, plus your pension grows massively!</span>}
+            {isBorderline && <span><strong>Borderline.</strong> Sacrificing {fmt(extraSacrificeNeeded)} leaves you with <strong>{fmt(-netBenefit)}/yr ({fmt(-netBenefit/12)}/mo) LESS</strong> cash in your pocket. However, don't forget the invisible benefit: {fmt(extraSacrificeNeeded)} is added to your pension pot tax-free!</span>}
+            {!isWorthIt && !isBorderline && <span><strong>Worse off day-to-day.</strong> Sacrificing {fmt(extraSacrificeNeeded)} leaves you with <strong>{fmt(-netBenefit)}/yr ({fmt(-netBenefit/12)}/mo) LESS</strong> cash in your pocket. While your pension grows significantly, you must comfortably afford this reduction in daily liquidity to make it work.</span>}
+          </div>
+        );
+      })()}
+
+      <Explainer>
+        <strong>Net Cash in Pocket</strong> represents your day-to-day liquidity: Take-Home Pay minus your Final Nursery Bill.<br/><br/>
+        <strong>Take-Home Pay</strong> includes your regular salary and any post-tax bonus received during the year.<br/><br/>
+        <strong>How to pension down:</strong><br/>
+        • <em>Salary Sacrifice:</em> Your employer deducts {fmt(extraSacrificeNeeded)} from your gross pay. Your take-home pay smoothly drops by the exact amount shown.<br/>
+        • <em>SIPP / Relief at Source:</em> You must deposit the cash <strong>after tax</strong>. You deposit {fmt(extraSacrificeNeeded * 0.8)} from your own bank account. The pension provider adds {fmt(extraSacrificeNeeded * 0.2)}. Finally, you claim the remaining higher-rate tax back from HMRC via Self Assessment. The net mathematical result matches the numbers shown above, but the cash flow requires you to front the money first!
+      </Explainer>
+    </Card>
+  );
+}
+
+function AvailableSchemesCard({ ccResult }) {
+  const { eligible } = ccResult;
+  return (
+    <Card>
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)',marginBottom:12}}>Available Government Schemes</div>
+      {eligible ? (
+        <div style={{display:'flex',flexDirection:'column',gap:12,fontSize:12,lineHeight:1.5,color:'var(--text)'}}>
+          <div>
+            <strong style={{color:'var(--green)'}}>15 or 30 Hours Free Childcare</strong><br/>
+            Working parents with ANI under £100k get 15 hours of free childcare for children from 9 months old, and 30 hours for 3 and 4-year-olds. (Available for 38 term-time weeks).
+          </div>
+          <div>
+            <strong style={{color:'var(--green)'}}>Tax-Free Childcare</strong><br/>
+            The government pays 20% of your childcare costs up to a maximum of £2,000 per child, per year (or £4,000 if disabled). Both parents must have ANI under £100k.
+          </div>
+          <div>
+            <strong style={{color:'var(--green)'}}>Child Benefit</strong><br/>
+            You get full Child Benefit if your ANI is under £60,000. Between £60,000 and £80,000, you pay a High Income Child Benefit Charge (tapering to 0% kept at £80k).
+          </div>
+        </div>
+      ) : (
+        <div style={{display:'flex',flexDirection:'column',gap:12,fontSize:12,lineHeight:1.5,color:'var(--text)'}}>
+          <div style={{padding:'10px 12px',borderRadius:8,background:'color-mix(in oklch,var(--red) 8%,var(--surface2))',border:'1px solid color-mix(in oklch,var(--red) 25%,transparent)',fontSize:12,color:'var(--red)'}}>
+            Because your ANI is £100,000 or above, you have lost eligibility for Tax-Free Childcare and the extended 15/30 hours free childcare for working parents.
+          </div>
+          <div>
+            <strong style={{color:'var(--text)'}}>Universal 15 Hours (3 & 4-year-olds)</strong><br/>
+            Regardless of your income, all 3 and 4-year-olds in England receive 15 hours of free childcare for 38 weeks a year. This is a universal entitlement and is not means-tested.
+          </div>
+          <div>
+            <strong style={{color:'var(--text)'}}>Workplace Nurseries</strong><br/>
+            If your employer provides a workplace nursery, you can pay for it via salary sacrifice completely tax-free and NI-free, and it is exempt from the £100k rules.
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function ChildcarePage({ inputs, setInputs, result, ccResult: passedCcResult }) {
+  const ccResult = useMemo(()=>passedCcResult || calcChildcare(inputs,result),[inputs,result,passedCcResult]);
+  return (
+    <div className="mag-grid">
+      <div className="mag-left">
+        <ChildrenCard inputs={inputs} setInputs={setInputs}/>
+      </div>
+      <div className="mag-right">
+        <div style={{display:'flex',flexDirection:'column',gap:14}}>
+          <div>
+            <div style={{fontFamily:'Playfair Display',fontSize:24,fontWeight:700,color:'var(--text)',lineHeight:1.2,marginBottom:5}}>
+              Childcare Cliff Edge
+            </div>
+            <div style={{fontSize:12,color:'var(--muted)'}}>Tax-Free Childcare & 30 Hours · ANI Threshold £100,000</div>
+          </div>
+          <AniSummaryCard ccResult={ccResult}/>
+          <LiquidityComparisonCard ccResult={ccResult}/>
+          <AvailableSchemesCard ccResult={ccResult}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BUDGET COMPONENTS
+// ═══════════════════════════════════════════════════════════════════════════════
+function BudgetHero({ budget }) {
+  const { monthlyTakeHome, totalExpenses, remaining } = budget;
+  return (
+    <div style={{background:'var(--accent)',borderRadius:16,padding:'22px 20px',animation:'fadeUp .4s ease both'}}>
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:'rgba(255,255,255,0.7)',marginBottom:4}}>
+        Leftover Monthly Cash
+      </div>
+      <div style={{fontSize:36,fontWeight:700,color:'#fff',fontVariantNumeric:'tabular-nums',lineHeight:1}}>
+        <AnimNum value={remaining}/>
+      </div>
+      <div style={{fontSize:12,color:'rgba(255,255,255,0.6)',marginTop:4}}>
+        After all planned expenses
+      </div>
+      <div style={{display:'flex',gap:12,marginTop:14,paddingTop:12,borderTop:'1px solid rgba(255,255,255,0.18)',flexWrap:'wrap'}}>
+        {[
+          {label:'Income', value:fmt(monthlyTakeHome)},
+          {label:'Expenses', value:fmt(totalExpenses)},
+          {label:'Saved %', value:pct(monthlyTakeHome > 0 ? budget.savings / monthlyTakeHome : 0)},
+        ].map((item,i)=>(
+          <div key={i} style={{flex:'1 1 auto',minWidth:70}}>
+            <div style={{fontSize:9,color:'rgba(255,255,255,0.6)',fontWeight:600,letterSpacing:'.08em',textTransform:'uppercase'}}>{item.label}</div>
+            <div style={{fontSize:15,fontWeight:700,color:'#fff',marginTop:2}}>{item.value}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BudgetDonut({ budget }) {
+  const { housing, utilities, transport, lifestyle, financial, remaining, monthlyTakeHome } = budget;
+  const size=180,r=68,cx=90,cy=90;
+  const circum = 2*Math.PI*r;
+  
+  const segs = [
+    housing > 0 && {label:'Housing', value:housing, color:'var(--c1)'},
+    utilities > 0 && {label:'Utilities', value:utilities, color:'var(--c2)'},
+    transport > 0 && {label:'Transport', value:transport, color:'var(--c5)'},
+    lifestyle > 0 && {label:'Lifestyle', value:lifestyle, color:'var(--c3)'},
+    financial > 0 && {label:'Financial', value:financial, color:'var(--c4)'},
+    remaining > 0 && {label:'Leftover', value:remaining, color:'var(--border)'},
+  ].filter(Boolean);
+  
+  const total = monthlyTakeHome || 1;
+  let offset = 0;
+
+  return (
+    <div id="budget-chart-container" style={{display:'flex',alignItems:'center',gap:20,flexWrap:'wrap',justifyContent:'center'}}>
+      <svg width={size} height={size} style={{flexShrink:0}}>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--bg2)" strokeWidth={18}/>
+        {segs.map((seg,i)=>{
+          const frac=(seg.value/total);
+          const dash=frac*circum;
+          const gap=circum-dash;
+          const currentOffset = offset;
+          offset+=seg.value/total;
+          return <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={seg.color} strokeWidth={18}
+            strokeDasharray={`${dash} ${gap}`} strokeDashoffset={circum*0.25 - currentOffset*circum} strokeLinecap="butt"/>;
+        })}
+      </svg>
+      <div style={{display:'flex',flexDirection:'column',gap:6}}>
+        {segs.map((seg,i)=>(
+          <div key={i} style={{display:'flex',alignItems:'center',gap:7}}>
+            <div style={{width:9,height:9,borderRadius:2,background:seg.color,flexShrink:0}}/>
+            <span style={{fontSize:11,color:'var(--muted)',fontWeight:500,minWidth:96}}>{seg.label}</span>
+            <span style={{fontSize:11,color:'var(--text)',fontWeight:600,fontVariantNumeric:'tabular-nums'}}>{pct(seg.value/total)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BudgetSummaryCard({ budget }) {
+  const { housing, utilities, transport, lifestyle, financial, totalExpenses } = budget;
+  return (
+    <Card>
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)',marginBottom:12}}>Monthly Spending Overview</div>
+      <div style={{display:'flex',flexDirection:'column',gap:8}}>
+        {[
+          {label:'Housing & Bills', value:housing},
+          {label:'Utilities', value:utilities},
+          {label:'Transport', value:transport},
+          {label:'Living & Lifestyle', value:lifestyle},
+          {label:'Savings & Investments', value:financial},
+        ].map((row,i)=>(
+          <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--border)'}}>
+            <span style={{fontSize:13,color:'var(--muted)'}}>{row.label}</span>
+            <span style={{fontSize:13,fontWeight:600,color:'var(--text)'}}>{fmt(row.value)}</span>
+          </div>
+        ))}
+        <div style={{display:'flex',justifyContent:'space-between',padding:'8px 0',marginTop:4}}>
+          <span style={{fontSize:14,fontWeight:700,color:'var(--text)'}}>Total Monthly Outgoings</span>
+          <span style={{fontSize:14,fontWeight:700,color:'var(--accent)'}}>{fmt(totalExpenses)}</span>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function BudgetHousingCard({ inputs, set }) {
+  return (
+    <Card>
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)',marginBottom:12}}>Housing</div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+        <div>
+          <Label>Mortgage or Rent</Label>
+          <PoundInput value={inputs.budgetMortgageRent} onChange={set('budgetMortgageRent')} suffix="/mo" small/>
+        </div>
+        <div>
+          <Label>Council Tax</Label>
+          <PoundInput value={inputs.budgetCouncilTax} onChange={set('budgetCouncilTax')} suffix="/mo" small/>
+        </div>
+        <div>
+          <Label>Home / Contents Insurance</Label>
+          <PoundInput value={inputs.budgetHomeInsurance} onChange={set('budgetHomeInsurance')} suffix="/mo" small/>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function BudgetUtilitiesCard({ inputs, set }) {
+  return (
+    <Card>
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)',marginBottom:12}}>Utilities</div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+        <div>
+          <Label>Electricity & Gas</Label>
+          <PoundInput value={inputs.budgetEnergy} onChange={set('budgetEnergy')} suffix="/mo" small/>
+        </div>
+        <div>
+          <Label>Water</Label>
+          <PoundInput value={inputs.budgetWater} onChange={set('budgetWater')} suffix="/mo" small/>
+        </div>
+        <div>
+          <Label>Internet</Label>
+          <PoundInput value={inputs.budgetInternet} onChange={set('budgetInternet')} suffix="/mo" small/>
+        </div>
+        <div>
+          <Label>Other Utilities</Label>
+          <PoundInput value={inputs.budgetOtherUtilities} onChange={set('budgetOtherUtilities')} suffix="/mo" small/>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function BudgetLifestyleCard({ inputs, set }) {
+  return (
+    <Card>
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)',marginBottom:12}}>Lifestyle</div>
+      <div style={{display:'flex',flexDirection:'column',gap:10}}>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+          <div>
+            <Label>Groceries</Label>
+            <PoundInput value={inputs.budgetGroceries} onChange={set('budgetGroceries')} suffix="/mo" small/>
+          </div>
+          <div>
+            <Label>Household Items</Label>
+            <PoundInput value={inputs.budgetHousehold} onChange={set('budgetHousehold')} suffix="/mo" small/>
+          </div>
+          <div>
+            <Label>Eating Out</Label>
+            <PoundInput value={inputs.budgetEatingOut} onChange={set('budgetEatingOut')} suffix="/mo" small/>
+          </div>
+          <div>
+            <Label>Gym / Sports</Label>
+            <PoundInput value={inputs.budgetGym} onChange={set('budgetGym')} suffix="/mo" small/>
+          </div>
+          <div>
+            <Label>Shopping & Other</Label>
+            <PoundInput value={inputs.budgetShopping} onChange={set('budgetShopping')} suffix="/mo" small/>
+          </div>
+          <div>
+            <Label>Holidays</Label>
+            <PoundInput value={inputs.budgetHolidays} onChange={set('budgetHolidays')} suffix="/mo" small/>
+          </div>
+          <div>
+            <Label>Life Insurance</Label>
+            <PoundInput value={inputs.budgetLifeInsurance} onChange={set('budgetLifeInsurance')} suffix="/mo" small/>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function BudgetFinancialCard({ inputs, set }) {
+  return (
+    <Card>
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)',marginBottom:12}}>Savings & Investments</div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+        <div>
+          <Label>Saving</Label>
+          <PoundInput value={inputs.budgetSaving} onChange={set('budgetSaving')} suffix="/mo" small/>
+        </div>
+        <div>
+          <Label>Investing</Label>
+          <PoundInput value={inputs.budgetInvesting} onChange={set('budgetInvesting')} suffix="/mo" small/>
+        </div>
+        <div>
+          <Label>Sinking Funds</Label>
+          <PoundInput value={inputs.budgetSinkingFunds} onChange={set('budgetSinkingFunds')} suffix="/mo" small/>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function BudgetTransportCard({ inputs, set }) {
+  const count = Number(inputs.budgetCarsCount) || 0;
+  return (
+    <Card>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)'}}>Transport</div>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <span style={{fontSize:11,color:'var(--muted)'}}>Vehicles</span>
+          <div style={{display:'flex',gap:4,alignItems:'center'}}>
+            <button onClick={()=>set('budgetCarsCount')(Math.max(0, count - 1))} 
+              style={{width:26,height:26,borderRadius:6,border:'1.5px solid var(--border)',background:'var(--surface2)',cursor:'pointer',fontSize:14,color:'var(--text)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              −
+            </button>
+            <span style={{fontSize:13,fontWeight:700,color:'var(--text)',minWidth:20,textAlign:'center'}}>{count}</span>
+            <button onClick={()=>set('budgetCarsCount')(Math.min(4, count + 1))}
+              style={{width:26,height:26,borderRadius:6,border:'1.5px solid var(--accent)',background:'var(--accent)',cursor:'pointer',fontSize:14,color:'white',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              +
+            </button>
+          </div>
+        </div>
+      </div>
+      {count === 0 && (
+        <div style={{fontSize:12,color:'var(--muted)',fontStyle:'italic',textAlign:'center',padding:'8px 0'}}>Click + to add a vehicle</div>
+      )}
+      {Array.from({length:count}).map((_,i) => (
+        <div key={i} style={{padding:'12px 0', borderTop: i > 0 ? '1px solid var(--border)' : 'none'}}>
+          <div style={{marginBottom:8}}>
+            <Label>Vehicle Name</Label>
+            <input type="text" value={inputs[`car${i}Name`] || ''} 
+              onChange={e => set(`car${i}Name`)(e.target.value)}
+              placeholder={`Car ${i+1}`}
+              style={{width:'100%',padding:'7px 10px',borderRadius:8,border:'1.5px solid var(--border)',background:'var(--surface2)',color:'var(--text)',fontSize:13,fontWeight:600}} />
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+            <div>
+              <Label>Payment / Finance</Label>
+              <PoundInput value={inputs[`car${i}Payment`]} onChange={set(`car${i}Payment`)} suffix="/mo" small/>
+            </div>
+            <div>
+              <Label>Insurance</Label>
+              <PoundInput value={inputs[`car${i}Insurance`]} onChange={set(`car${i}Insurance`)} suffix="/mo" small/>
+            </div>
+            <div>
+              <Label>Road Tax</Label>
+              <PoundInput value={inputs[`car${i}RoadTax`]} onChange={set(`car${i}RoadTax`)} suffix="/mo" small/>
+            </div>
+            <div>
+              <Label>Maintenance</Label>
+              <PoundInput value={inputs[`car${i}Maintenance`]} onChange={set(`car${i}Maintenance`)} suffix="/mo" small/>
+            </div>
+          </div>
+          <div style={{marginTop:10}}>
+            <Label>Fuel / Charging / Other</Label>
+            <PoundInput value={inputs[`car${i}Other`]} onChange={set(`car${i}Other`)} suffix="/mo" small/>
+          </div>
+        </div>
+      ))}
+      <div style={{borderTop: count > 0 ? '1px solid var(--border)' : 'none', paddingTop: count > 0 ? 12 : 0}}>
+        <Label>Public Transport</Label>
+        <PoundInput value={inputs.budgetPublicTransport} onChange={set('budgetPublicTransport')} suffix="/mo" small/>
+      </div>
+    </Card>
+  );
+}
+
+function BudgetPlannerPage({ inputs, setInputs, result, budget: passedBudget }) {
+  const budget = useMemo(() => passedBudget || calcBudget(inputs, result), [inputs, result, passedBudget]);
+  const set = k => v => setInputs(p => ({ ...p, [k]: v }));
+
+  return (
+    <div className="mag-grid">
+      <div className="mag-left">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <BudgetHousingCard inputs={inputs} set={set} />
+          <BudgetUtilitiesCard inputs={inputs} set={set} />
+          <BudgetTransportCard inputs={inputs} set={set} />
+          <BudgetLifestyleCard inputs={inputs} set={set} />
+          <BudgetFinancialCard inputs={inputs} set={set} />
+        </div>
+      </div>
+      <div className="mag-right">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <div style={{ fontFamily: 'Playfair Display', fontSize: 24, fontWeight: 700, color: 'var(--text)', lineHeight: 1.2, marginBottom: 5 }}>
+              Budget Planner
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--muted)' }}>Track your monthly spending vs take-home pay</div>
+          </div>
+          <BudgetHero budget={budget} />
+          <Card>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 12 }}>Monthly Split</div>
+            <BudgetDonut budget={budget} />
+          </Card>
+          <BudgetSummaryCard budget={budget} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PANELS
+// ═══════════════════════════════════════════════════════════════════════════════
+function InputsPanel({ inputs, setInputs, yearData, result, ccResult, budget, isComparison }) {
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:12}}>
+      <div style={{marginBottom:6}}>
+        {!isComparison && (
+          <>
+            <div style={{fontFamily:'Playfair Display',fontSize:24,fontWeight:700,color:'var(--text)',lineHeight:1.2,marginBottom:5}}>Calculate Your<br/>Take-Home Pay</div>
+            <div style={{fontSize:12,color:'var(--muted)'}}>UK PAYE · {inputs.taxYear} · Income Tax, NI, Pension, Student Loans & More</div>
+          </>
+        )}
+      </div>
+      <SalaryCard inputs={inputs} setInputs={setInputs}/>
+      <AllowancesCard inputs={inputs} setInputs={setInputs}/>
+      <OtherIncomeCard inputs={inputs} setInputs={setInputs}/>
+      <SettingsCard inputs={inputs} setInputs={setInputs} result={result} ccResult={ccResult} budget={budget}/>
+      <TaxCodeCard inputs={inputs} setInputs={setInputs} yearData={yearData}/>
+      <PensionCard inputs={inputs} setInputs={setInputs} yearData={yearData} result={result}/>
+      <BonusCard inputs={inputs} setInputs={setInputs}/>
+      <BenefitsCard inputs={inputs} setInputs={setInputs} yearData={yearData}/>
+      <EVCard inputs={inputs} setInputs={setInputs} yearData={yearData} result={result}/>
+      <OtherSacCard inputs={inputs} setInputs={setInputs}/>
+      <StudentLoanCard inputs={inputs} setInputs={setInputs} yearData={yearData}/>
+      <AdjustmentsCard inputs={inputs} setInputs={setInputs}/>
+    </div>
+  );
+}
+
+function ResultsPanel({ result, inputs }) {
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:14}}>
+      <TakeHomeHero result={result} freq={inputs.freq}/>
+      <Card>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)',marginBottom:12}}>Income Split</div>
+        <DonutChart result={result} freq={inputs.freq}/>
+      </Card>
+      <BreakdownCard result={result} freq={inputs.freq} inputs={inputs}/>
+      {inputs.freq==='monthly'&&<PayslipCard result={result} inputs={inputs}/>}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// APP
+// ═══════════════════════════════════════════════════════════════════════════════
+async function exportToExcel(inputs, result, ccResult, budget) {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'UK Salary Calculator';
+  wb.lastModifiedBy = 'UK Salary Calculator';
+  wb.created = new Date();
+  wb.modified = new Date();
+
+  // STYLES
+  // STYLES
+  const accentColor = 'FF5677FC';
+  const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: accentColor } };
+  const subHeaderFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F3F4' } };
+  const whiteText = { name: 'Segoe UI', color: { argb: 'FFFFFFFF' }, bold: true, size: 11 };
+  const boldText = { name: 'Segoe UI', bold: true, size: 11 };
+  const normalText = { name: 'Segoe UI', size: 11 };
+  const centerAlign = { horizontal: 'center', vertical: 'middle' };
+  const currencyFmt = '"£"#,##0.00;[Red]("-£"#,##0.00)';
+
+  const styleSheet = ws => {
+    ws.getRows(1, 100).forEach(row => {
+      row.font = normalText;
+    });
+  };
+
+  // 1. SALARY & TAX SHEET
+  const ws1 = wb.addWorksheet('Salary & Tax');
+  ws1.columns = [{ width: 35 }, { width: 22 }, { width: 22 }];
+  
+  ws1.mergeCells('A1:C1');
+  ws1.getCell('A1').value = 'UK Take-Home Salary Report (' + inputs.taxYear + ')';
+  ws1.getCell('A1').font = { name: 'Segoe UI', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+  ws1.getCell('A1').fill = headerFill;
+  ws1.getCell('A1').alignment = centerAlign;
+  ws1.getRow(1).height = 30;
+
+  ws1.addRow([]);
+  const sHead = ws1.addRow(['Summary', 'Annual', 'Monthly']);
+  sHead.font = boldText;
+  sHead.fill = subHeaderFill;
+
+  const summaryRows = [
+    ['Gross Salary', result.sal, result.sal / 12],
+    ['Income Tax', -result.incomeTax, -result.incomeTax / 12],
+    ['National Insurance', -result.niAmount, -result.niAmount / 12],
+    ['Student Loan', -result.slAmount, -result.slAmount / 12],
+    ['Pension Contribution', -(result.pensionSacAnnual + result.pensionReliefNet), -(result.pensionSacAnnual + result.pensionReliefNet) / 12],
+    ['Take-Home Pay', result.finalTakeHome, result.finalTakeHome / 12],
+  ];
+
+  summaryRows.forEach(r => {
+    const row = ws1.addRow(r);
+    row.getCell(2).numFmt = currencyFmt;
+    row.getCell(3).numFmt = currencyFmt;
+    if (r[0] === 'Take-Home Pay') {
+      row.font = boldText;
+      row.getCell(2).font = { ...boldText, color: { argb: 'FF5677FC' } };
+      row.getCell(3).font = { ...boldText, color: { argb: 'FF5677FC' } };
+    }
+  });
+
+  ws1.addRow([]);
+  ws1.addRow(['Tax Band Breakdown']).font = boldText;
+  const tHead = ws1.addRow(['Band', 'Taxable Amount', 'Rate', 'Tax Paid']);
+  tHead.font = boldText;
+  tHead.fill = subHeaderFill;
+  result.bandBreakdown.forEach(b => {
+    const row = ws1.addRow([b.name, b.taxable, b.rate, b.amount]);
+    row.getCell(2).numFmt = currencyFmt;
+    row.getCell(3).numFmt = '0%';
+    row.getCell(4).numFmt = currencyFmt;
+  });
+  styleSheet(ws1);
+
+  // 2. CHILDCARE SHEET
+  const ws2 = wb.addWorksheet('Childcare Planner');
+  ws2.columns = [{ width: 35 }, { width: 22 }, { width: 22 }];
+  
+  ws2.mergeCells('A1:C1');
+  ws2.getCell('A1').value = 'Childcare Impact Report';
+  ws2.getCell('A1').font = { name: 'Segoe UI', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+  ws2.getCell('A1').fill = headerFill;
+  ws2.getCell('A1').alignment = centerAlign;
+  ws2.getRow(1).height = 30;
+
+  ws2.addRow([]);
+  const cHead = ws2.addRow(['Scenario Comparison', 'Current', 'Optimised']);
+  cHead.font = boldText;
+  cHead.fill = subHeaderFill;
+
+  ws2.addRow(['Adjusted Net Income (ANI)', ccResult.ani, ccResult.eligible ? ccResult.ani : 100000]).getCell(2).numFmt = currencyFmt;
+  ws2.getCell('C4').numFmt = currencyFmt;
+  ws2.addRow(['Take-Home Pay', ccResult.currentTakeHome, ccResult.optimisedTakeHome]).getCell(2).numFmt = currencyFmt;
+  ws2.getCell('C5').numFmt = currencyFmt;
+  ws2.addRow(['Nursery Fees (Net)', -ccResult.currentTotalChildcareCost, -ccResult.optimisedTotalChildcareCost]).getCell(2).numFmt = currencyFmt;
+  ws2.getCell('C6').numFmt = currencyFmt;
+  const liqRow = ws2.addRow(['Net Cash in Pocket', ccResult.currentLiquidity, ccResult.optimisedLiquidity]);
+  liqRow.font = boldText;
+  liqRow.getCell(2).numFmt = currencyFmt;
+  liqRow.getCell(3).numFmt = currencyFmt;
+  liqRow.getCell(3).font = { ...boldText, color: { argb: 'FF00A86B' } };
+
+  ws2.addRow([]);
+  ws2.addRow(['Benefit Retention Status']).font = boldText;
+  ws2.addRow(['Status:', ccResult.eligible ? 'ELIGIBLE' : 'INELIGIBLE (Cliff Edge)']).getCell(2).font = { bold: true, color: { argb: ccResult.eligible ? 'FF00A86B' : 'FFD32F2F' } };
+  if (!ccResult.eligible) {
+    ws2.addRow(['Extra Pension Needed:', ccResult.aniGap]).getCell(2).numFmt = currencyFmt;
+    ws2.addRow(['Net Benefit of Sacrificing:', ccResult.netBenefit]).getCell(2).numFmt = currencyFmt;
+  }
+  styleSheet(ws2);
+
+  // 3. BUDGET SHEET
+  const ws3 = wb.addWorksheet('Budget Planner');
+  ws3.columns = [{ width: 35 }, { width: 22 }];
+
+  ws3.mergeCells('A1:B1');
+  ws3.getCell('A1').value = 'Monthly Budget Report';
+  ws3.getCell('A1').font = { name: 'Segoe UI', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+  ws3.getCell('A1').fill = headerFill;
+  ws3.getCell('A1').alignment = centerAlign;
+  ws3.getRow(1).height = 30;
+
+  ws3.addRow([]);
+  const bIncRow = ws3.addRow(['Monthly Income', budget.monthlyTakeHome]);
+  bIncRow.getCell(2).numFmt = currencyFmt;
+  bIncRow.font = boldText;
+
+  ws3.addRow([]);
+  const bHead = ws3.addRow(['Category', 'Monthly Amount']);
+  bHead.font = boldText;
+  bHead.fill = subHeaderFill;
+
+  const budgetItems = [
+    ['Housing & Council Tax', budget.housing],
+    ['Utilities & Bills', budget.utilities],
+    ['Transport', budget.transport],
+    ['Living & Lifestyle', budget.lifestyle],
+    ['Savings & Investments', budget.financial],
+  ];
+
+  budgetItems.forEach(item => {
+    ws3.addRow(item).getCell(2).numFmt = currencyFmt;
+  });
+
+  if (budget.carsCount > 0) {
+    ws3.addRow([]);
+    ws3.addRow(['Vehicle Breakdown']).font = boldText;
+    budget.carDetails.forEach(car => {
+      ws3.addRow([car.name, car.total]).getCell(2).numFmt = currencyFmt;
+    });
+  }
+
+  ws3.addRow([]);
+  const totRow = ws3.addRow(['Total Outgoings', budget.totalExpenses]);
+  totRow.font = boldText;
+  totRow.getCell(2).numFmt = currencyFmt;
+  const remRow = ws3.addRow(['Remaining Balance', budget.remaining]);
+  remRow.font = boldText;
+  remRow.getCell(2).numFmt = currencyFmt;
+  remRow.getCell(2).font = { name: 'Segoe UI', color: { argb: budget.remaining >= 0 ? 'FF00A86B' : 'FFD32F2F' }, bold: true };
+  styleSheet(ws3);
+
+    const buffer = await wb.xlsx.writeBuffer();
+  saveAs(new Blob([buffer]), 'UK_Salary_Report_' + new Date().toISOString().split('T')[0] + '.xlsx');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// COMPARISON COMPONENTS
+// ═══════════════════════════════════════════════════════════════════════════════
+function ComparisonSummaryPanel({ currentResult, compareResult, compareType, leftLabel, rightLabel }) {
+  // Prior Year: diff = current - prior (positive = better off now)
+  // Alternative: diff = alternative - current (positive = alternative is better)
+  const diff = compareType === 'prior'
+    ? currentResult.finalTakeHome - compareResult.finalTakeHome
+    : compareResult.finalTakeHome - currentResult.finalTakeHome;
+  const diffBonus = compareType === 'prior'
+    ? currentResult.finalTakeHomeBonus - compareResult.finalTakeHomeBonus
+    : compareResult.finalTakeHomeBonus - currentResult.finalTakeHomeBonus;
+  const isBetter = diff >= 0;
+
+  const leftGross  = currentResult.sal + currentResult.bon;
+  const rightGross = compareResult.sal + compareResult.bon;
+  const diffGross  = compareType === 'prior' ? leftGross - rightGross : rightGross - leftGross;
+  const baseGross  = compareType === 'prior' ? rightGross : leftGross;
+  const pctGross   = baseGross > 0 ? diffGross / baseGross : 0;
+
+  const Row = ({ label, aVal, bVal, isRate }) => {
+    const aNum = typeof aVal === 'number' ? aVal : 0;
+    const bNum = typeof bVal === 'number' ? bVal : 0;
+    if (Math.abs(aNum) < 0.01 && Math.abs(bNum) < 0.01) return null;
+    const aStr = isRate ? pct(aNum) : fmt(aNum);
+    const bStr = isRate ? pct(bNum) : fmt(bNum);
+    const delta = compareType === 'prior' ? aNum - bNum : bNum - aNum;
+    const isNegativeBad = label.includes('Tax') || label.includes('NI') || label.includes('Loan') || label.includes('BIK');
+    const deltaColor = Math.abs(delta) < 0.5 ? 'var(--muted)' : (delta > 0 ? (isNegativeBad ? 'var(--red)' : 'var(--green)') : (isNegativeBad ? 'var(--green)' : 'var(--red)'));
+    return (
+      <div style={{display:'grid',gridTemplateColumns:'1fr 90px 90px 52px',gap:6,fontSize:12,padding:'7px 0',borderBottom:'1px dashed var(--border)',alignItems:'center'}}>
+        <div style={{color:'var(--muted)',fontSize:11}}>{label}</div>
+        <div style={{textAlign:'right',fontWeight:600,color:'var(--text)',fontVariantNumeric:'tabular-nums'}}>{aStr}</div>
+        <div style={{textAlign:'right',fontWeight:600,color:'var(--text)',fontVariantNumeric:'tabular-nums'}}>{bStr}</div>
+        <div style={{textAlign:'right',fontSize:10,fontWeight:700,color:deltaColor}}>{Math.abs(delta) < 0.5 ? '—' : (delta > 0 ? '+' : '−') + (isRate ? pct(Math.abs(delta)) : fmt(Math.abs(delta)))}</div>
+      </div>
+    );
+  };
+
+  const hasBonus     = currentResult.bon > 0 || compareResult.bon > 0;
+  const hasSL        = currentResult.slAmount + currentResult.slBonus > 0 || compareResult.slAmount + compareResult.slBonus > 0;
+  const hasBik       = currentResult.evBikTax > 0 || compareResult.evBikTax > 0;
+  const hasEmpPension = currentResult.pensionErAnnual > 0 || compareResult.pensionErAnnual > 0;
+
+  const SectionHead = ({ children }) => (
+    <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)',marginTop:6,marginBottom:4,paddingTop:10,borderTop:'1px solid var(--border)'}}>{children}</div>
+  );
+
+  const isBetterBonus = diffBonus >= 0;
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:14}}>
+      <div style={{
+        background: isBetterBonus ? 'var(--green-bg)' : 'color-mix(in oklch,var(--red) 8%,var(--surface2))',
+        borderRadius:16, padding:'20px 22px', animation:'fadeUp .4s ease both',
+        border: `1px solid ${isBetterBonus ? 'color-mix(in oklch,var(--green) 30%,transparent)' : 'color-mix(in oklch,var(--red) 25%,transparent)'}`,
+      }}>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:isBetterBonus?'var(--green)':'var(--red)',marginBottom:6}}>
+          {compareType === 'prior'
+            ? (diffBonus > 0 ? '✓ Better off now (incl. bonus) by' : diffBonus < 0 ? '✗ Worse off now (incl. bonus) by' : 'No change (incl. bonus)')
+            : (diffBonus > 0 ? '✓ Comparison is better (incl. bonus) by' : diffBonus < 0 ? '✗ Comparison is worse (incl. bonus) by' : 'No change (incl. bonus)')}
+        </div>
+        <div style={{fontSize:38,fontWeight:700,color:isBetterBonus?'var(--green)':'var(--red)',fontVariantNumeric:'tabular-nums',lineHeight:1.1}}>
+          <AnimNum value={Math.abs(diffBonus)}/>
+        </div>
+        
+        <div style={{marginTop:8, display:'flex', flexDirection:'column', gap:2}}>
+          <div style={{fontSize:12, fontWeight:600, color: diff >= 0 ? 'var(--green)' : 'var(--red)'}}>
+            {diff >= 0 ? '✓ Better' : '✗ Worse'} off by {fmt(Math.abs(diff))} / yr ({fmt(Math.abs(diff)/12)} / mo) excluding bonus
+          </div>
+        </div>
+
+        {/* Gross Growth Section */}
+        <div style={{marginTop:12, paddingTop:10, borderTop:'1px solid rgba(0,0,0,0.05)', display:'flex', flexDirection:'column', gap:6}}>
+          {(() => {
+            const nowSal = currentResult.sal;
+            const nowBon = currentResult.bon;
+            const pastSal = compareResult.sal;
+            const pastBon = compareResult.bon;
+
+            const salDiff = compareType === 'prior' ? nowSal - pastSal : pastSal - nowSal;
+            const salPct  = (compareType === 'prior' ? pastSal : nowSal) > 0 ? (salDiff / (compareType === 'prior' ? pastSal : nowSal)) * 100 : 0;
+            
+            const bonDiff = compareType === 'prior' ? nowBon - pastBon : pastBon - nowBon;
+            const bonPct  = (compareType === 'prior' ? pastBon : nowBon) > 0 ? (bonDiff / (compareType === 'prior' ? pastBon : nowBon)) * 100 : 0;
+
+            const currentBonOfSal = nowSal > 0 ? (nowBon / nowSal) * 100 : 0;
+            const pastBonOfPastSal = pastSal > 0 ? (pastBon / pastSal) * 100 : 0;
+
+            const modeText = compareType === 'prior' ? 'prior year' : 'current';
+
+            return (
+              <>
+                <div style={{fontSize:12, color:'var(--text)', opacity:0.9}}>
+                  Gross Salary <strong>{salDiff >= 0 ? 'increased' : 'decreased'}</strong> by <strong>{Math.abs(salPct).toFixed(1)}%</strong> compared to {modeText}.
+                </div>
+                {(nowBon > 0 || pastBon > 0) && (
+                  <div style={{fontSize:12, color:'var(--text)', opacity:0.9, lineHeight:1.4}}>
+                    Bonus has <strong>{bonDiff >= 0 ? 'increased' : 'decreased'}</strong> by <strong>{Math.abs(bonPct).toFixed(1)}%</strong> and is now <strong>{currentBonOfSal.toFixed(1)}%</strong> of annual salary 
+                    {compareType === 'prior' && pastSal > 0 && <span> (vs <strong>{pastBonOfPastSal.toFixed(1)}%</strong> of prior year annual salary)</span>}.
+                  </div>
+                )}
+              </>
+            );
+          })()}
+        </div>
+      </div>
+
+      <Card>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 90px 90px 52px',gap:6,fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.05em',color:'var(--muted)',paddingBottom:8,borderBottom:'2px solid var(--border)'}}>
+          <div></div>
+          <div style={{textAlign:'right'}}>{leftLabel}</div>
+          <div style={{textAlign:'right'}}>{rightLabel}</div>
+          <div style={{textAlign:'right'}}>Δ</div>
+        </div>
+
+        <SectionHead>Take-Home</SectionHead>
+        <Row label="Monthly (excl. bonus)" aVal={currentResult.finalTakeHome/12}      bVal={compareResult.finalTakeHome/12}/>
+        <Row label="Annual (excl. bonus)"  aVal={currentResult.finalTakeHome}          bVal={compareResult.finalTakeHome}/>
+        {hasBonus && <Row label="Monthly (incl. bonus)" aVal={currentResult.finalTakeHomeBonus/12} bVal={compareResult.finalTakeHomeBonus/12}/>}
+        {hasBonus && <Row label="Annual (incl. bonus)"  aVal={currentResult.finalTakeHomeBonus}    bVal={compareResult.finalTakeHomeBonus}/>}
+
+        <SectionHead>Pension Contributions</SectionHead>
+        <Row label="Employee (Annual)"    aVal={currentResult.pensionEmpAnnual} bVal={compareResult.pensionEmpAnnual}/>
+        {hasEmpPension && <Row label="Employer (Annual)" aVal={currentResult.pensionErAnnual} bVal={compareResult.pensionErAnnual}/>}
+
+        <SectionHead>Tax Impact</SectionHead>
+        <Row label="Effective Tax Rate" aVal={currentResult.effectiveRate} bVal={compareResult.effectiveRate} isRate/>
+        <Row label="Marginal Rate"      aVal={currentResult.marginalRate}  bVal={compareResult.marginalRate}  isRate/>
+        <Row label="Income Tax"         aVal={currentResult.incomeTax + currentResult.taxOnBonus} bVal={compareResult.incomeTax + compareResult.taxOnBonus}/>
+        <Row label="National Insurance" aVal={currentResult.niAmount + currentResult.niBonus}     bVal={compareResult.niAmount + compareResult.niBonus}/>
+        {hasSL  && <Row label="Student Loan" aVal={currentResult.slAmount + currentResult.slBonus} bVal={compareResult.slAmount + compareResult.slBonus}/>}
+        {hasBik && <Row label="BIK Tax Cost" aVal={currentResult.evBikTax}                        bVal={compareResult.evBikTax}/>}
+
+        <SectionHead>Adjusted Net Income (Childcare)</SectionHead>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,paddingTop:6}}>
+          <div>
+            <div style={{fontSize:11,color:'var(--muted)'}}>{leftLabel} ANI</div>
+            <div style={{fontSize:18,fontWeight:700,color:currentResult.ani<=100000?'var(--green)':'var(--red)'}}>{fmt(currentResult.ani)}</div>
+          </div>
+          <div>
+            <div style={{fontSize:11,color:'var(--muted)'}}>{rightLabel} ANI</div>
+            <div style={{fontSize:18,fontWeight:700,color:compareResult.ani<=100000?'var(--green)':'var(--red)'}}>{fmt(compareResult.ani)}</div>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function ComparisonPage({ mainInputs, mainResult, currentInputs, setCurrentInputs, currentResult, currentYearData, compareInputs, setCompareInputs, compareYearData, compareResult, syncCurrent, setSyncCurrent, compareType, setCompareType }) {
+  const leftLabel  = compareType === 'prior' ? 'Now' : 'Current';
+  const rightLabel = compareType === 'prior' ? 'Prior Year' : 'Comparison';
+  const modeLabel  = compareType === 'prior' ? 'Prior Year' : 'Comparison Scenario';
+  const modeDesc   = compareType === 'prior'
+    ? 'Compare your current salary against a prior tax year to see if you are better or worse off today.'
+    : 'Model a new scenario (e.g. a job offer or pay rise) and compare it against your current setup.';
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',flex:1,minHeight:0,overflow:'hidden'}}>
+      {/* Unified header bar spanning all columns */}
+      <div style={{padding:'14px 24px',borderBottom:'1.5px solid var(--border)',background:'var(--bg2)',display:'flex',alignItems:'center',gap:20,flexShrink:0,flexWrap:'wrap'}}>
+        <div>
+          <div style={{fontFamily:'Playfair Display',fontSize:20,fontWeight:700,color:'var(--text)',lineHeight:1.2}}>Scenario Comparison</div>
+          <div style={{fontSize:12,color:'var(--muted)',marginTop:2}}>{modeDesc}</div>
+        </div>
+        <div style={{marginLeft:'auto'}}>
+        </div>
+      </div>
+
+      {/* 3-column body */}
+      <div className="mag-grid-3">
+        {/* Column 1: Current */}
+        <div className="comparison-col-1" style={{overflowY:'auto',padding:'18px 16px',borderRight:'1.5px solid var(--border)',background:'var(--surface)'}}>
+          <div style={{height:72,marginBottom:10,display:'flex',flexDirection:'column',justifyContent:'space-between'}}>
+            <div style={{fontFamily:'Playfair Display',fontSize:16,fontWeight:700,color:'var(--text)',lineHeight:1.2}}>
+              {compareType === 'prior' ? 'Current (Now)' : 'Current'}
+            </div>
+            <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',background:'var(--surface2)',borderRadius:10,border:'1.5px solid var(--border)'}}>
+              <SwitchToggle checked={syncCurrent} onChange={v => { setSyncCurrent(v); if (v) setCurrentInputs({...mainInputs}); }}/>
+              <span style={{fontSize:11,color:'var(--muted)',fontWeight:500}}>{syncCurrent ? 'Synced from Calculator' : 'Independent'}</span>
+            </div>
+          </div>
+          <div style={{opacity:syncCurrent?0.5:1,pointerEvents:syncCurrent?'none':'auto',transition:'opacity .2s'}}>
+            <InputsPanel inputs={currentInputs} setInputs={setCurrentInputs} yearData={currentYearData} result={currentResult} isComparison={true}/>
+          </div>
+        </div>
+
+        {/* Column 2: Compare */}
+        <div className="comparison-col-2" style={{overflowY:'auto',padding:'18px 16px',borderRight:'1.5px solid var(--border)',background:'var(--bg)'}}>
+          <div style={{height:72,marginBottom:10,display:'flex',flexDirection:'column',justifyContent:'space-between'}}>
+            <div style={{fontFamily:'Playfair Display',fontSize:16,fontWeight:700,color:'var(--text)',lineHeight:1.2}}>
+              {modeLabel}
+            </div>
+            <select value={compareType} onChange={e => setCompareType(e.target.value)} style={{
+              fontSize:11,
+              color:'var(--muted)',
+              fontWeight:500,
+              padding:'8px 36px 8px 12px',
+              background:'var(--surface2)',
+              borderRadius:10,
+              border:'1.5px solid var(--border)',
+              height: 'auto',
+              width: '100%',
+              backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\")",
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 12px center',
+              WebkitAppearance: 'none'
+            }}>
+              <option value="prior">Prior Year — am I better off now?</option>
+              <option value="alternative">Comparison Scenario — model a new scenario</option>
+            </select>
+          </div>
+          <InputsPanel inputs={compareInputs} setInputs={setCompareInputs} yearData={compareYearData} result={compareResult} isComparison={true}/>
+        </div>
+
+        {/* Column 3: Summary (wider) */}
+        <div className="comparison-col-3" style={{overflowY:'auto',padding:'22px 28px',background:'var(--surface)'}}>
+          <div style={{fontFamily:'Playfair Display',fontSize:18,fontWeight:700,color:'var(--text)',lineHeight:1.2,marginBottom:14}}>Impact Summary</div>
+          <ComparisonSummaryPanel
+            currentResult={currentResult}
+            compareResult={compareResult}
+            compareType={compareType}
+            leftLabel={leftLabel}
+            rightLabel={rightLabel}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+const DEFAULTS = {
+  salary:45000, bonus:5000,
+  taxYear:'2026/27', taxCode:'1257L', region:'england', freq:'annual',
+  pensionEmpPct:5, pensionEmpFixed:2250, pensionEmpUseFixed:false, pensionEmpMethod:'sacrifice',
+  pensionErPct:3, pensionErFixed:1350, pensionErUseFixed:false,
+  bonusEnabled:false,
+  benEnabled:false, benMedical:0, benDental:0, benOther:0,
+  evEnabled:false, evMonthly:350, evP11d:35000, evIsEV:true, evManualBikPct:15,
+  otherSacEnabled:false, otherSacMonthly:50,
+  studentLoan:'None',
+  pensionErPassNiSaving:false, pensionIncludeBonus:false,
+  allowancesEnabled:false, allowancesFreq:'annual', allowanceCar:0, allowanceOnCall:0, allowanceOther:0,
+  otherIncomeEnabled:false, otherIncomeRental:0, otherIncomeSavings:0, otherIncomeDividends:0, otherIncomeOther:0,
+  netDeductions:[], netAdditions:[],
+  childrenCount:1,
+  child1Age:'3-4', child1MonthlyFundedCost:0, child1MonthlyCost:0,
+  child2Age:'0-8m', child2MonthlyFundedCost:0, child2MonthlyCost:0,
+  child3Age:'0-8m', child3MonthlyFundedCost:0, child3MonthlyCost:0,
+  child4Age:'0-8m', child4MonthlyFundedCost:0, child4MonthlyCost:0,
+  // Budget Planner State
+  budgetMortgageRent: 0,
+  budgetCouncilTax: 0,
+  budgetEnergy: 0,
+  budgetWater: 0,
+  budgetInternet: 0,
+  budgetOtherUtilities: 0,
+  budgetGroceries: 0,
+  budgetHousehold: 0,
+  budgetEatingOut: 0,
+  budgetGym: 0,
+  budgetShopping: 0,
+  budgetHolidays: 0,
+  budgetSaving: 0,
+  budgetInvesting: 0,
+  budgetSinkingFunds: 0,
+  budgetLifeInsurance: 0,
+  budgetHomeInsurance: 0,
+  budgetCarsCount: 0,
+  budgetPublicTransport: 0,
+  car0Name: 'Car 1', car0Payment: 0, car0Maintenance: 0, car0RoadTax: 0, car0Insurance: 0, car0Other: 0,
+  car1Name: 'Car 2', car1Payment: 0, car1Maintenance: 0, car1RoadTax: 0, car1Insurance: 0, car1Other: 0,
+  car2Name: 'Car 3', car2Payment: 0, car2Maintenance: 0, car2RoadTax: 0, car2Insurance: 0, car2Other: 0,
+  car3Name: 'Car 4', car3Payment: 0, car3Maintenance: 0, car3RoadTax: 0, car3Insurance: 0, car3Other: 0,
+};
+
+function App() {
+  const [dark, setDark] = useState(() => {
+    const saved = localStorage.getItem('salary_calc_theme');
+    return saved ? saved === 'dark' : false;
+  });
+  const [inputs, setInputs] = useState(() => {
+    const saved = localStorage.getItem('salary_calc_data');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return { ...DEFAULTS, ...parsed };
+      } catch (e) {
+        return { ...DEFAULTS };
+      }
+    }
+    return { ...DEFAULTS };
+  });
+  const [compareInputs, setCompareInputs] = useState(() => {
+    const saved = localStorage.getItem('salary_calc_compare_data');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return { ...DEFAULTS, ...parsed };
+      } catch (e) {}
+    }
+    return null;
+  });
+  // currentInputs: the "Current" column in the Comparison tab (may be independent from main inputs)
+  const [currentInputs, setCurrentInputs] = useState(null);
+  const [syncCurrent, setSyncCurrent] = useState(true);
+  const [compareType, setCompareType] = useState('prior'); // 'prior' | 'alternative'
+  const [page, setPage] = useState('calculator');
+
+  useEffect(() => {
+    if (!compareInputs && inputs) setCompareInputs({...inputs});
+  }, [inputs, compareInputs]);
+
+  // Initialize currentInputs from main inputs
+  useEffect(() => {
+    if (!currentInputs && inputs) setCurrentInputs({...inputs});
+  }, [inputs, currentInputs]);
+
+  // Keep currentInputs synced to main inputs when toggle is on
+  useEffect(() => {
+    if (syncCurrent) setCurrentInputs({...inputs});
+  }, [inputs, syncCurrent]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    localStorage.setItem('salary_calc_theme', dark ? 'dark' : 'light');
+  }, [dark]);
+
+  useEffect(() => {
+    localStorage.setItem('salary_calc_data', JSON.stringify(inputs));
+  }, [inputs]);
+
+  useEffect(() => {
+    if (compareInputs) {
+      localStorage.setItem('salary_calc_compare_data', JSON.stringify(compareInputs));
+    }
+  }, [compareInputs]);
+
+  const yearData = TAX_YEARS[inputs.taxYear]||TAX_YEARS['2026/27'];
+  const result   = useMemo(()=>calcAll(inputs,yearData),[inputs,yearData]);
+  const ccResult = useMemo(()=>calcChildcare(inputs,result),[inputs,result]);
+  const budget   = useMemo(()=>calcBudget(inputs,result),[inputs,result]);
+
+  const compareInputsSafe = compareInputs || inputs;
+  const compareYearData = TAX_YEARS[compareInputsSafe.taxYear]||TAX_YEARS['2026/27'];
+  const compareResult   = useMemo(()=>calcAll(compareInputsSafe,compareYearData),[compareInputsSafe,compareYearData]);
+
+  const currentInputsSafe = currentInputs || inputs;
+  const currentYearData = TAX_YEARS[currentInputsSafe.taxYear]||TAX_YEARS['2026/27'];
+  const currentResult   = useMemo(()=>calcAll(currentInputsSafe,currentYearData),[currentInputsSafe,currentYearData]);
+
+  return (
+    <div className="app-root">
+      <header className="app-header">
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:28,height:28,background:'var(--accent)',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+            <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
+              <path d="M3 14L9 4l6 10H3z" fill="white" opacity=".9"/>
+              <circle cx="9" cy="9" r="2.5" fill="white"/>
+            </svg>
+          </div>
+          <span style={{fontFamily:'Playfair Display',fontSize:16,fontWeight:700,color:'var(--text)',letterSpacing:'-0.01em'}}>UK Take Home Salary Calculator</span>
+          <span style={{fontSize:10,color:'var(--muted)',fontWeight:600,padding:'2px 8px',background:'var(--surface2)',borderRadius:99,border:'1px solid var(--border)'}}>UK Tax {inputs.taxYear}</span>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <div className="header-tags">
+            {[
+              inputs.region==='scotland'?'Scotland':'England/Wales/NI',
+              inputs.taxCode||'1257L',
+              inputs.freq==='monthly'?'Monthly':'Annual',
+            ].map((tag,i)=>(
+              <span key={i} style={{fontSize:10,color:'var(--muted)',padding:'2px 7px',background:'var(--surface2)',borderRadius:99,border:'1px solid var(--border)',fontWeight:500}}>{tag}</span>
+            ))}
+          </div>
+          <button onClick={() => { if(confirm('Reset all data to defaults?')) { localStorage.removeItem('salary_calc_data'); window.location.reload(); } }} title="Reset All Data" style={{width:34,height:34,borderRadius:8,border:'1.5px solid var(--border)',background:'var(--surface2)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--text)',transition:'all .2s'}}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+            </svg>
+          </button>
+          <button onClick={() => exportToExcel(inputs, result, ccResult, budget)} title="Export to Excel" style={{width:34,height:34,borderRadius:8,border:'1.5px solid var(--border)',background:'var(--surface2)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--text)',transition:'all .2s'}}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </button>
+          <button onClick={()=>setDark(d=>!d)} style={{width:34,height:34,borderRadius:8,border:'1.5px solid var(--border)',background:'var(--surface2)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--text)',transition:'all .2s'}}>
+            {dark
+              ?<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+              :<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            }
+          </button>
+        </div>
+      </header>
+      <TabBar page={page} setPage={setPage} ani={result.ani}/>
+      {page==='calculator' && (
+        <div className="mag-grid">
+          <div className="mag-left"><InputsPanel inputs={inputs} setInputs={setInputs} yearData={yearData} result={result} ccResult={ccResult} budget={budget}/></div>
+          <div className="mag-right"><ResultsPanel result={result} inputs={inputs}/></div>
+        </div>
+      )}
+      {page==='comparison' && <ComparisonPage mainInputs={inputs} mainResult={result} currentInputs={currentInputsSafe} setCurrentInputs={setCurrentInputs} currentResult={currentResult} currentYearData={currentYearData} compareInputs={compareInputsSafe} setCompareInputs={setCompareInputs} compareYearData={compareYearData} compareResult={compareResult} syncCurrent={syncCurrent} setSyncCurrent={setSyncCurrent} compareType={compareType} setCompareType={setCompareType}/>}
+      {page==='childcare' && <ChildcarePage inputs={inputs} setInputs={setInputs} result={result} ccResult={ccResult}/>}
+      {page==='budget' && <BudgetPlannerPage inputs={inputs} setInputs={setInputs} result={result} budget={budget}/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+</script>
+</body>
+</html>
