@@ -421,12 +421,12 @@ function calcAll(inputs, yearData) {
   const pensionEmpRAS   = pensionEmpMethod === 'relief' ? pensionEmpAnnual : 0;
   const thresholdIncome = taxableIncome + bon - pensionEmpRAS;
   // Adjusted income: add back sacrifice (excluded from taxableIncome) + employer contributions
-  const adjustedIncome  = thresholdIncome + pensionSacAnnual + pensionErAnnual;
+  const adjustedIncome  = thresholdIncome + pensionSacAnnual + pensionErEffective;
   let effectiveAA = annualAllowance;
   if (adjustedIncome > 260000 && thresholdIncome > 200000) {
     effectiveAA = Math.max(minTaperedAA, annualAllowance - Math.floor((adjustedIncome - 260000) / 2));
   }
-  const totalPensionInput = pensionEmpAnnual + pensionErAnnual;
+  const totalPensionInput = pensionEmpAnnual + pensionErEffective;
   const aaExcess = Math.max(0, totalPensionInput - effectiveAA);
   // ANI used for PA taper, Child Benefit, childcare threshold
   const ani = taxableIncome + bon - pensionReliefAmount;
@@ -956,7 +956,7 @@ function BreakdownCard({ result, freq, inputs }) {
             ?<span><strong>Salary sacrifice pension</strong> — {f(result.pensionSacAnnual)} was deducted from gross before tax and NI, saving both. Income tax saved: ~{fmt(result.pensionSacAnnual*(result.marginalRate*0.6))} | NI saved: ~{fmt(calcNI(result.grossAfterSac+result.pensionSacAnnual,yd.ni)-result.niAmount)}</span>
             :<span><strong>Relief at Source pension</strong> — you contribute {f(result.pensionReliefNet)} from net pay. HMRC adds 20% basic rate relief automatically. Higher/additional rate taxpayers can claim extra relief via Self Assessment.</span>
           }
-          {result.pensionErAnnual>0&&<div style={{marginTop:6,borderTop:'1px solid var(--info-border)',paddingTop:6}}>Employer contribution: {fmt(result.pensionErAnnual)} (added to pension — not deducted from your pay)</div>}
+          {result.pensionErEffective>0&&<div style={{marginTop:6,borderTop:'1px solid var(--info-border)',paddingTop:6}}>Employer contribution: {fmt(result.pensionErEffective)} (added to pension — not deducted from your pay)</div>}
         </Detail>}
       </>}
 
@@ -2463,7 +2463,7 @@ function ComparisonSummaryPanel({ currentResult, compareResult, compareType, lef
   const hasBonus     = currentResult.bon > 0 || compareResult.bon > 0;
   const hasSL        = currentResult.slAmount + currentResult.slBonus > 0 || compareResult.slAmount + compareResult.slBonus > 0;
   const hasBik       = currentResult.evBikTax > 0 || compareResult.evBikTax > 0;
-  const hasEmpPension = currentResult.pensionErAnnual > 0 || compareResult.pensionErAnnual > 0;
+  const hasEmpPension = currentResult.pensionErEffective > 0 || compareResult.pensionErEffective > 0;
 
   const SectionHead = ({ children }) => (
     <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)',marginTop:6,marginBottom:4,paddingTop:10,borderTop:'1px solid var(--border)'}}>{children}</div>
@@ -2545,7 +2545,7 @@ function ComparisonSummaryPanel({ currentResult, compareResult, compareType, lef
 
         <SectionHead>Pension Contributions</SectionHead>
         <Row label="Employee (Annual)"    aVal={currentResult.pensionEmpAnnual} bVal={compareResult.pensionEmpAnnual}/>
-        {hasEmpPension && <Row label="Employer (Annual)" aVal={currentResult.pensionErAnnual} bVal={compareResult.pensionErAnnual}/>}
+        {hasEmpPension && <Row label="Employer (Annual)" aVal={currentResult.pensionErEffective} bVal={compareResult.pensionErEffective}/>}
 
         <SectionHead>Tax Impact</SectionHead>
         <Row label="Effective Tax Rate" aVal={currentResult.effectiveRate} bVal={compareResult.effectiveRate} isRate/>
