@@ -40,13 +40,13 @@
       --c5: oklch(65% 0.09 280);
       --radius: 14px;
       --transition: 0.3s cubic-bezier(.4,0,.2,1);
-      /* Hero card — light mode: gold accent surface, white text */
+      /* Hero card — light mode: accent orange, white text (original) */
       --hero-bg:      var(--accent);
       --hero-border:  transparent;
       --hero-text:    #fff;
-      --hero-muted:   rgba(255,255,255,0.68);
+      --hero-muted:   rgba(255,255,255,0.65);
       --hero-number:  #fff;
-      --hero-divider: rgba(255,255,255,0.20);
+      --hero-divider: rgba(255,255,255,0.18);
     }
 
     [data-theme="dark"] {
@@ -385,10 +385,14 @@ function calcAll(inputs, yearData) {
     pensionErPassNiSaving, pensionIncludeBonus,
     evEnabled, evMonthly, evP11d, evIsEV, evManualBikPct,
     otherSacEnabled, otherSacMonthly,
-    benMedical, benDental, benOther, studentLoan,
+    benMedical, benDental, benOther,
     otherIncomeEnabled, otherIncomeRental, otherIncomeSavings, otherIncomeDividends, otherIncomeOther,
     allowancesEnabled, allowancesFreq, allowanceCar, allowanceOnCall, allowanceOther,
     netDeductions, netAdditions } = inputs;
+  const slCount = Number(inputs.studentLoanCount) || 0;
+  const slPlans0 = Array.from({length: slCount}, (_, i) => inputs[`sl${i}Plan`] || 'None').filter(p => p !== 'None');
+  // backward compat: old single-plan saves stored in inputs.studentLoan
+  const slPlans = slPlans0.length > 0 ? slPlans0 : (inputs.studentLoan && inputs.studentLoan !== 'None' ? [inputs.studentLoan] : []);
 
   const isScottish = region === 'scotland';
   const sal = Math.max(0, Number(salary) || 0);
@@ -425,8 +429,8 @@ function calcAll(inputs, yearData) {
 
   const niAmount = calcNI(niableIncome, yearData.ni);
   const niBonus  = calcNI(niableIncome + bon, yearData.ni) - niAmount;
-  const slAmount = calcStudentLoan(niableIncome, studentLoan, yearData);
-  const slBonus  = calcStudentLoan(niableIncome + bon, studentLoan, yearData) - slAmount;
+  const slAmount = slPlans.reduce((s, p) => s + calcStudentLoan(niableIncome, p, yearData), 0);
+  const slBonus  = slPlans.reduce((s, p) => s + calcStudentLoan(niableIncome + bon, p, yearData), 0) - slAmount;
 
   const pensionReliefAmount = pensionEmpMethod === 'relief' ? pensionEmpAnnual : 0;
   const pensionReliefNet = pensionReliefAmount * 0.8;
@@ -477,7 +481,7 @@ function calcAll(inputs, yearData) {
     sal, bon, totalSacrifice:r2(totalSacrifice), pensionSacAnnual:r2(pensionSacAnnual), evSacAnnual:r2(evSacAnnual), otherSacAnnual:r2(otherSacAnnual),
     grossAfterSac:r2(grossAfterSac), totalAllowances:r2(totalAllowances), bikPct, evBikValue:r2(evBikValue), p11dBenefits:r2(p11dBenefits), totalBenefits:r2(totalBenefits),
     taxableIncome:r2(taxableIncome), incomeTax:r2(incomeTax), bandBreakdown, effectivePA:r2(effectivePA),
-    taxOnBonus:r2(taxOnBonus), niAmount:r2(niAmount), niBonus:r2(niBonus), slAmount:r2(slAmount), slBonus:r2(slBonus),
+    taxOnBonus:r2(taxOnBonus), niAmount:r2(niAmount), niBonus:r2(niBonus), slAmount:r2(slAmount), slBonus:r2(slBonus), slPlans,
     pensionEmpAnnual:r2(pensionEmpAnnual), pensionEmpMethod, pensionReliefAmount:r2(pensionReliefAmount), pensionReliefNet:r2(pensionReliefNet), pensionErAnnual:r2(pensionErAnnual),
     pensionErNiSaving:r2(pensionErNiSaving), pensionErEffective:r2(pensionErEffective),
     otherIncomeAnnual:r2(otherIncomeAnnual),
@@ -961,15 +965,19 @@ function BreakdownCard({ result, freq, inputs }) {
       </Detail>}
 
       {result.slAmount>0&&<>
-        <Row label={`Student Loan (${inputs.studentLoan})`} value={-pp(result.slAmount,freq)} color="var(--muted)" expandable ek="sl"/>
-        {exp.sl&&yd.studentLoan[inputs.studentLoan]&&<Detail>
-          <strong>{inputs.studentLoan} repayments</strong> collected via PAYE on gross salary before sacrifice.<br/>
-          <div style={{marginTop:4}}>
-            Threshold: {fmt(yd.studentLoan[inputs.studentLoan].threshold)}<br/>
-            Rate: {(yd.studentLoan[inputs.studentLoan].rate*100).toFixed(0)}% on earnings above threshold<br/>
-            Repayable earnings: {fmt(Math.max(0,result.sal-yd.studentLoan[inputs.studentLoan].threshold))}<br/>
-            Annual repayment: <strong>{f(result.slAmount)}</strong>
-          </div>
+        <Row label={result.slPlans.length===1?`Student Loan (${result.slPlans[0]})`:'Student Loans'} value={-pp(result.slAmount,freq)} color="var(--muted)" expandable ek="sl"/>
+        {exp.sl&&<Detail>
+          {result.slPlans.map(plan=>{
+            const pd=yd.studentLoan[plan];
+            if(!pd) return null;
+            return <div key={plan} style={{marginBottom:8}}>
+              <strong>{plan}</strong> — {(pd.rate*100).toFixed(0)}% on earnings above {fmt(pd.threshold)}<br/>
+              Repayable: {fmt(Math.max(0,result.sal-pd.threshold))} · Annual: <strong>{fmt(calcStudentLoan(result.sal,plan,yd))}</strong>
+            </div>;
+          })}
+          {result.slPlans.length>1&&<div style={{borderTop:'1px solid var(--border)',paddingTop:6,marginTop:2}}>
+            Combined annual repayment: <strong>{f(result.slAmount)}</strong>
+          </div>}
         </Detail>}
       </>}
 
@@ -1106,7 +1114,7 @@ function PayslipCard({ result, inputs }) {
         <div style={{fontSize:10,fontWeight:600,color:'var(--muted)',marginBottom:4,marginTop:8,textTransform:'uppercase',letterSpacing:'0.05em'}}>Deductions</div>
         <SlipRow label="PAYE Income Tax" amount={-nIT} color="var(--red)"/>
         <SlipRow label="National Insurance" amount={-nNI} color="var(--red)"/>
-        {nSL>0&&<SlipRow label={`Student Loan (${inputs.studentLoan})`} amount={-nSL} color="var(--muted)"/>}
+        {nSL>0&&<SlipRow label={result.slPlans.length===1?`Student Loan (${result.slPlans[0]})`:'Student Loans'} amount={-nSL} color="var(--muted)"/>}
         {nPen>0&&<SlipRow label="Pension (Relief at Source)" amount={-nPen} color="var(--muted)"/>}
         <SlipRow label="Net Pay" amount={nNet} bold border color="var(--accent)"/>
       </div>}
@@ -1120,7 +1128,7 @@ function PayslipCard({ result, inputs }) {
         <div style={{fontSize:10,fontWeight:600,color:'var(--muted)',marginBottom:4,marginTop:8,textTransform:'uppercase',letterSpacing:'0.05em'}}>Deductions</div>
         <SlipRow label="PAYE Income Tax" amount={-(nIT+result.taxOnBonus)} color="var(--red)" sub={`incl. ${fmt(result.taxOnBonus)} on bonus`}/>
         <SlipRow label="National Insurance" amount={-(nNI+result.niBonus)} color="var(--red)" sub={`incl. ${fmt(result.niBonus)} on bonus`}/>
-        {(nSL+result.slBonus)>0&&<SlipRow label={`Student Loan (${inputs.studentLoan})`} amount={-(nSL+result.slBonus)} color="var(--muted)"/>}
+        {(nSL+result.slBonus)>0&&<SlipRow label={result.slPlans.length===1?`Student Loan (${result.slPlans[0]})`:'Student Loans'} amount={-(nSL+result.slBonus)} color="var(--muted)"/>}
         {nPen>0&&<SlipRow label="Pension (Relief at Source)" amount={-nPen} color="var(--muted)"/>}
         <SlipRow label="Net Pay" amount={nNet+result.bon-result.taxOnBonus-result.niBonus-result.slBonus} bold border color="var(--accent)"/>
         <div style={{marginTop:8,padding:'8px 10px',background:'var(--green-bg)',borderRadius:8,fontSize:11,color:'var(--green)'}}>
@@ -1457,19 +1465,43 @@ function OtherSacCard({ inputs, setInputs }) {
 
 function StudentLoanCard({ inputs, setInputs, yearData }) {
   const set = k => v => setInputs(p=>({...p,[k]:v}));
-  const planData = inputs.studentLoan!=='None'&&yearData.studentLoan[inputs.studentLoan];
+  const count = Number(inputs.studentLoanCount) || 0;
+  const planKeys = Object.keys(yearData.studentLoan);
   return (
     <Card>
-      <Label>Student Loan</Label>
-      <select value={inputs.studentLoan} onChange={e=>set('studentLoan')(e.target.value)}>
-        <option value="None">None</option>
-        {Object.keys(yearData.studentLoan).map(p=><option key={p} value={p}>{p}</option>)}
-      </select>
-      {planData&&<div style={{fontSize:11,color:'var(--muted)',marginTop:6}}>
-        {(planData.rate*100).toFixed(0)}% repayment on earnings above {fmt(planData.threshold)} · {inputs.taxYear}
-      </div>}
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:count>0?12:0}}>
+        <div style={{fontSize:11,fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',color:'var(--muted)'}}>Student Loans</div>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <div style={{display:'flex',gap:4,alignItems:'center'}}>
+            <button onClick={()=>set('studentLoanCount')(Math.max(0,count-1))}
+              style={{width:26,height:26,borderRadius:6,border:'1.5px solid var(--border)',background:'var(--surface2)',cursor:'pointer',fontSize:14,color:'var(--text)',display:'flex',alignItems:'center',justifyContent:'center'}}>−</button>
+            <span style={{fontSize:13,fontWeight:700,color:'var(--text)',minWidth:20,textAlign:'center'}}>{count}</span>
+            <button onClick={()=>set('studentLoanCount')(Math.min(3,count+1))}
+              style={{width:26,height:26,borderRadius:6,border:'1.5px solid var(--accent)',background:'var(--accent)',cursor:'pointer',fontSize:14,color:'white',display:'flex',alignItems:'center',justifyContent:'center'}}>+</button>
+          </div>
+        </div>
+      </div>
+      {count===0&&<div style={{fontSize:12,color:'var(--muted)',fontStyle:'italic',padding:'4px 0'}}>Click + to add a student loan</div>}
+      {Array.from({length:count}).map((_,i)=>{
+        const planKey = `sl${i}Plan`;
+        const planVal = inputs[planKey]||'None';
+        const planData = planVal!=='None'&&yearData.studentLoan[planVal];
+        return (
+          <div key={i} style={{paddingTop:i>0?12:0,borderTop:i>0?'1px solid var(--border)':'none'}}>
+            <Label>Loan {i+1} Plan</Label>
+            <select value={planVal} onChange={e=>set(planKey)(e.target.value)}
+              style={{width:'100%',padding:'7px 10px',borderRadius:8,border:'1.5px solid var(--border)',background:'var(--surface2)',color:'var(--text)',fontSize:13}}>
+              <option value="None">None</option>
+              {planKeys.map(p=><option key={p} value={p}>{p}</option>)}
+            </select>
+            {planData&&<div style={{fontSize:11,color:'var(--muted)',marginTop:5}}>
+              {(planData.rate*100).toFixed(0)}% on earnings above {fmt(planData.threshold)} · {inputs.taxYear}
+            </div>}
+          </div>
+        );
+      })}
       <Explainer>
-        Student loan repayments are collected by HMRC via PAYE once your income exceeds the plan threshold. They're taken on your gross salary <em>before</em> sacrifice deductions.<br/><br/>
+        Student loan repayments are collected by HMRC via PAYE once your income exceeds the plan threshold. They're taken on your gross salary <em>before</em> sacrifice deductions. You can hold multiple plans simultaneously (e.g. Plan 1 + Postgrad).<br/><br/>
         <strong>Plan 1</strong>: pre-2012 starters or Scottish (threshold ~£25k)<br/>
         <strong>Plan 2</strong>: 2012–2023 English/Welsh starters (threshold ~£27k)<br/>
         <strong>Plan 4</strong>: Scottish students post-2007 (threshold ~£31k)<br/>
@@ -1704,13 +1736,13 @@ function AniSummaryCard({ ccResult }) {
   const pctUsed = Math.min(1, ani / 100000);
   const color = eligible ? 'var(--green)' : 'var(--red)';
   return (
-    <div style={{background:'var(--hero-bg)',border:'2px solid var(--hero-border)',borderRadius:16,padding:'22px 20px',animation:'fadeUp .4s ease both'}}>
-      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--hero-muted)',marginBottom:8}}>Adjusted Net Income</div>
+    <div style={{background:'var(--surface)',border:'1.5px solid var(--border)',borderRadius:16,padding:'22px 20px',animation:'fadeUp .4s ease both'}}>
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)',marginBottom:8}}>Adjusted Net Income</div>
       <div style={{fontSize:28,fontWeight:700,color,fontVariantNumeric:'tabular-nums'}}><AnimNum value={ani}/></div>
-      <div style={{height:6,borderRadius:99,background:'var(--hero-divider)',marginTop:10,overflow:'hidden'}}>
+      <div style={{height:6,borderRadius:99,background:'var(--border)',marginTop:10,overflow:'hidden'}}>
         <div style={{height:'100%',width:`${pctUsed*100}%`,background:color,borderRadius:99,transition:'width .4s'}}/>
       </div>
-      <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'var(--hero-muted)',marginTop:4}}>
+      <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'var(--muted)',marginTop:4}}>
         <span>£0</span><span>£100,000</span>
       </div>
       <div style={{marginTop:10,padding:'8px 10px',borderRadius:8,
@@ -1733,7 +1765,7 @@ function AniSummaryCard({ ccResult }) {
           )
         }
       </div>
-      <div style={{fontSize:11,color:'var(--hero-muted)',marginTop:8}}>ANI = taxable income less personal pension contributions. Adjust salary sacrifice in the Calculator tab to change this.</div>
+      <div style={{fontSize:11,color:'var(--muted)',marginTop:8}}>ANI = taxable income less personal pension contributions. Adjust salary sacrifice in the Calculator tab to change this.</div>
     </div>
   );
 }
@@ -2629,8 +2661,8 @@ function ComparisonSummaryPanel({ currentResult, compareResult, compareType, lef
   return (
     <div style={{display:'flex',flexDirection:'column',gap:14}}>
       <div style={{
-        background: 'var(--hero-bg)',
-        border: '2px solid var(--hero-border)',
+        background: isBetterBonus ? 'var(--green-bg)' : 'color-mix(in oklch,var(--red) 8%,var(--surface2))',
+        border: `1px solid ${isBetterBonus ? 'color-mix(in oklch,var(--green) 30%,transparent)' : 'color-mix(in oklch,var(--red) 25%,transparent)'}`,
         borderRadius:16, padding:'20px 22px', animation:'fadeUp .4s ease both',
       }}>
         <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:isBetterBonus?'var(--green)':'var(--red)',marginBottom:6}}>
@@ -2649,7 +2681,7 @@ function ComparisonSummaryPanel({ currentResult, compareResult, compareType, lef
         </div>
 
         {/* Gross Growth Section */}
-        <div style={{marginTop:12, paddingTop:10, borderTop:'1px solid var(--hero-divider)', display:'flex', flexDirection:'column', gap:6}}>
+        <div style={{marginTop:12, paddingTop:10, borderTop:'1px solid var(--border)', display:'flex', flexDirection:'column', gap:6}}>
           {(() => {
             const nowSal = currentResult.sal;
             const nowBon = currentResult.bon;
@@ -2669,11 +2701,11 @@ function ComparisonSummaryPanel({ currentResult, compareResult, compareType, lef
 
             return (
               <>
-                <div style={{fontSize:12, color:'var(--hero-text)'}}>
+                <div style={{fontSize:12, color:'var(--text)'}}>
                   Gross Salary <strong>{salDiff >= 0 ? 'increased' : 'decreased'}</strong> by <strong>{Math.abs(salPct).toFixed(1)}%</strong> compared to {modeText}.
                 </div>
                 {(nowBon > 0 || pastBon > 0) && (
-                  <div style={{fontSize:12, color:'var(--hero-text)', lineHeight:1.4}}>
+                  <div style={{fontSize:12, color:'var(--text)', lineHeight:1.4}}>
                     Bonus has <strong>{bonDiff >= 0 ? 'increased' : 'decreased'}</strong> by <strong>{Math.abs(bonPct).toFixed(1)}%</strong> and is now <strong>{currentBonOfSal.toFixed(1)}%</strong> of annual salary
                     {compareType === 'prior' && pastSal > 0 && <span> (vs <strong>{pastBonOfPastSal.toFixed(1)}%</strong> of prior year annual salary)</span>}.
                   </div>
@@ -2816,7 +2848,8 @@ const DEFAULTS = {
   benEnabled:false, benMedical:0, benDental:0, benOther:0,
   evEnabled:false, evMonthly:350, evP11d:35000, evIsEV:true, evManualBikPct:15,
   otherSacEnabled:false, otherSacMonthly:50,
-  studentLoan:'None',
+  studentLoanCount: 0,
+  sl0Plan: 'None', sl1Plan: 'None', sl2Plan: 'None',
   pensionErPassNiSaving:false, pensionIncludeBonus:false,
   allowancesEnabled:false, allowancesFreq:'annual', allowanceCar:0, allowanceOnCall:0, allowanceOther:0,
   otherIncomeEnabled:false, otherIncomeRental:0, otherIncomeSavings:0, otherIncomeDividends:0, otherIncomeOther:0,
