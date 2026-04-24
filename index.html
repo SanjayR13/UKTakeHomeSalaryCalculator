@@ -602,6 +602,12 @@ function calcBudget(inputs, result) {
 // UTILITIES
 // ═══════════════════════════════════════════════════════════════════════════════
 const _gbp2 = new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP',minimumFractionDigits:2,maximumFractionDigits:2});
+const _num  = new Intl.NumberFormat('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtN = n => {
+  let v = Math.round((n||0)*100)/100;
+  if (Object.is(v, -0)) v = 0;
+  return v < 0 ? `(${_num.format(-v)})` : _num.format(v);
+};
 const fmt  = n => { 
   let v = Math.round((n||0)*100)/100; 
   if (Object.is(v, -0)) v = 0;
@@ -2445,17 +2451,19 @@ function ComparisonSummaryPanel({ currentResult, compareResult, compareType, lef
     const aNum = typeof aVal === 'number' ? aVal : 0;
     const bNum = typeof bVal === 'number' ? bVal : 0;
     if (Math.abs(aNum) < 0.01 && Math.abs(bNum) < 0.01) return null;
-    const aStr = isRate ? pct(aNum) : fmt(aNum);
-    const bStr = isRate ? pct(bNum) : fmt(bNum);
+    const aStr = isRate ? pct(aNum) : fmtN(aNum);
+    const bStr = isRate ? pct(bNum) : fmtN(bNum);
     const delta = compareType === 'prior' ? aNum - bNum : bNum - aNum;
     const isNegativeBad = label.includes('Tax') || label.includes('NI') || label.includes('Loan') || label.includes('BIK');
     const deltaColor = Math.abs(delta) < 0.5 ? 'var(--muted)' : (delta > 0 ? (isNegativeBad ? 'var(--red)' : 'var(--green)') : (isNegativeBad ? 'var(--green)' : 'var(--red)'));
+    const deltaStr = isRate ? (delta > 0 ? '+' : '') + pct(delta) : fmtN(delta);
+
     return (
-      <div style={{display:'grid',gridTemplateColumns:'1fr 90px 90px 52px',gap:6,fontSize:12,padding:'7px 0',borderBottom:'1px dashed var(--border)',alignItems:'center'}}>
-        <div style={{color:'var(--muted)',fontSize:11}}>{label}</div>
-        <div style={{textAlign:'right',fontWeight:600,color:'var(--text)',fontVariantNumeric:'tabular-nums'}}>{aStr}</div>
-        <div style={{textAlign:'right',fontWeight:600,color:'var(--text)',fontVariantNumeric:'tabular-nums'}}>{bStr}</div>
-        <div style={{textAlign:'right',fontSize:10,fontWeight:700,color:deltaColor}}>{Math.abs(delta) < 0.5 ? '—' : (delta > 0 ? '+' : '−') + (isRate ? pct(Math.abs(delta)) : fmt(Math.abs(delta)))}</div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 95px 95px 95px',gap:8,fontSize:12,padding:'7px 0',borderBottom:'1px dashed var(--border)',alignItems:'center'}}>
+        <div style={{color:'var(--muted)',fontSize:11,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} title={label}>{label}</div>
+        <div style={{textAlign:'right',fontWeight:600,color:'var(--text)',fontVariantNumeric:'tabular-nums',whiteSpace:'nowrap'}}>{aStr}</div>
+        <div style={{textAlign:'right',fontWeight:600,color:'var(--text)',fontVariantNumeric:'tabular-nums',whiteSpace:'nowrap'}}>{bStr}</div>
+        <div style={{textAlign:'right',fontSize:10,fontWeight:700,color:deltaColor,whiteSpace:'nowrap'}}>{Math.abs(delta) < 0.5 ? '—' : (delta > 0 && !isRate ? '+' : '') + deltaStr}</div>
       </div>
     );
   };
@@ -2529,12 +2537,12 @@ function ComparisonSummaryPanel({ currentResult, compareResult, compareType, lef
         </div>
       </div>
 
-      <Card>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 90px 90px 52px',gap:6,fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.05em',color:'var(--muted)',paddingBottom:8,borderBottom:'2px solid var(--border)'}}>
+      <Card style={{overflowX:'auto'}}>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 95px 95px 95px',gap:8,fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.05em',color:'var(--muted)',paddingBottom:8,borderBottom:'2px solid var(--border)'}}>
           <div></div>
-          <div style={{textAlign:'right'}}>{leftLabel}</div>
-          <div style={{textAlign:'right'}}>{rightLabel}</div>
-          <div style={{textAlign:'right'}}>Δ</div>
+          <div style={{textAlign:'right'}}>{leftLabel} (£)</div>
+          <div style={{textAlign:'right'}}>{rightLabel} (£)</div>
+          <div style={{textAlign:'right'}}>Δ (£)</div>
         </div>
 
         <SectionHead>Take-Home</SectionHead>
