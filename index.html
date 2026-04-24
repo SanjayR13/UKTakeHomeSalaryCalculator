@@ -227,8 +227,8 @@ const TAX_YEARS = {
       { name: "Starter Rate",      rate: 0.19, from: 12570, to: 14732 },
       { name: "Basic Rate",        rate: 0.20, from: 14732, to: 25688 },
       { name: "Intermediate Rate", rate: 0.21, from: 25688, to: 43662 },
-      { name: "Higher Rate",       rate: 0.42, from: 43662, to: 75000 },
-      { name: "Top Rate",          rate: 0.47, from: 75000, to: Infinity },
+      { name: "Higher Rate",       rate: 0.42, from: 43662, to: 125140 },
+      { name: "Top Rate",          rate: 0.47, from: 125140, to: Infinity },
     ],
     ni: { lower: 12570, upper: 50270, rate1: 0.12, rate2: 0.02 },
     studentLoan: {
@@ -299,12 +299,14 @@ function explainTaxCode(code, defaultPA) {
   return { text: 'Unrecognised tax code. Double-check your payslip or P60, or contact HMRC on 0300 200 3300 to confirm.', type: 'warn' };
 }
 
-function calcIncomeTax(income, taxCodeStr, yearData, isScottish) {
+function calcIncomeTax(income, taxCodeStr, yearData, isScottish, rasAdjustment) {
   const { pa: defaultPA, bands, scottish } = yearData;
   const { pa: codedPA, specialRate } = parseTaxCode(taxCodeStr, defaultPA);
   let effectivePA = codedPA;
-  if (specialRate === null && income > 100000) {
-    const reduction = Math.min(Math.max(0, codedPA), Math.floor((income - 100000) / 2));
+  // PA taper based on ANI: deduct gross RAS pension contributions before checking £100k threshold
+  const incomeForTaper = income - (rasAdjustment || 0);
+  if (specialRate === null && incomeForTaper > 100000) {
+    const reduction = Math.min(Math.max(0, codedPA), Math.floor((incomeForTaper - 100000) / 2));
     effectivePA = codedPA - reduction;
   }
   const paShift = defaultPA - effectivePA;
@@ -345,11 +347,12 @@ function calcStudentLoan(gross, plan, yearData) {
 
 function getMarginalRate(income, effectivePA, bands, niData, specialRate) {
   if (specialRate !== null) return specialRate + (income > niData.lower ? niData.rate1 : 0);
-  if (income > 100000 && income < 125140) return 0.60 + niData.rate2;
   let taxRate = 0;
   for (const b of bands) {
     if (income > b.from && income <= (b.to === Infinity ? income + 1 : b.to)) { taxRate = b.rate; break; }
   }
+  // PA taper zone: £1 PA lost per £2 earned means effective marginal rate = taxRate × 1.5
+  if (income > 100000 && income < 125140) return taxRate * 1.5 + niData.rate2;
   let niRate = 0;
   if (income > niData.lower && income <= niData.upper) niRate = niData.rate1;
   else if (income > niData.upper) niRate = niData.rate2;
@@ -397,8 +400,8 @@ function calcAll(inputs, yearData) {
   const niableIncome  = grossAfterSac + totalAllowances;
   const taxableIncome = niableIncome + totalBenefits + otherIncomeAnnual;
 
-  const { incomeTax, bandBreakdown, effectivePA } = calcIncomeTax(taxableIncome, taxCode, yearData, isScottish);
-  const { incomeTax: itBonus } = calcIncomeTax(taxableIncome + bon, taxCode, yearData, isScottish);
+  const { incomeTax, bandBreakdown, effectivePA } = calcIncomeTax(taxableIncome, taxCode, yearData, isScottish, pensionReliefAmount);
+  const { incomeTax: itBonus } = calcIncomeTax(taxableIncome + bon, taxCode, yearData, isScottish, pensionReliefAmount);
   const taxOnBonus = itBonus - incomeTax;
 
   const niAmount = calcNI(niableIncome, yearData.ni);
@@ -613,7 +616,6 @@ const fmt  = n => {
   if (Object.is(v, -0)) v = 0;
   return v < 0 ? `(${_gbp2.format(-v)})` : _gbp2.format(v); 
 };
-const fmtD = fmt;
 const clamp2dp = v => { const n = parseFloat(v); return isNaN(n) ? v : Math.round(n*100)/100; };
 const pct  = n => `${((n||0)*100).toFixed(2)}%`;
 const pp   = (annual, freq) => { const v = freq === 'monthly' ? annual / 12 : annual; return Math.round((v||0)*100)/100; };
@@ -1120,7 +1122,7 @@ function SalaryCard({ inputs, setInputs }) {
   const milestones = [20000,50270,100000,125140,200000];
   return (
     <Card>
-      <Label right={inputs.freq==='monthly'?fmtD(inputs.salary/12)+'/mo':undefined}>Annual Salary</Label>
+      <Label right={inputs.freq==='monthly'?fmt(inputs.salary/12)+'/mo':undefined}>Annual Salary</Label>
       <div style={{display:'flex',alignItems:'center',gap:4,marginBottom:4}}>
         <span style={{fontSize:20,fontWeight:600,color:'var(--muted)'}}>£</span>
         <input type="number" value={raw}
@@ -2737,6 +2739,7 @@ function App() {
   const [syncCurrent, setSyncCurrent] = useState(true);
   const [compareType, setCompareType] = useState('prior'); // 'prior' | 'alternative'
   const [page, setPage] = useState('calculator');
+  const [confirmReset, setConfirmReset] = useState(false);
 
   useEffect(() => {
     if (!compareInputs && inputs) setCompareInputs({...inputs});
@@ -2803,11 +2806,19 @@ function App() {
               <span key={i} style={{fontSize:10,color:'var(--muted)',padding:'2px 7px',background:'var(--surface2)',borderRadius:99,border:'1px solid var(--border)',fontWeight:500}}>{tag}</span>
             ))}
           </div>
-          <button onClick={() => { if(confirm('Reset all data to defaults?')) { localStorage.removeItem('salary_calc_data'); window.location.reload(); } }} title="Reset All Data" style={{width:34,height:34,borderRadius:8,border:'1.5px solid var(--border)',background:'var(--surface2)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--text)',transition:'all .2s'}}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
-            </svg>
-          </button>
+          {confirmReset ? (
+            <div style={{display:'flex',alignItems:'center',gap:6,background:'var(--surface2)',border:'1.5px solid var(--border)',borderRadius:8,padding:'4px 8px'}}>
+              <span style={{fontSize:11,fontWeight:600,color:'var(--muted)',whiteSpace:'nowrap'}}>Reset all data?</span>
+              <button onClick={()=>setConfirmReset(false)} style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:6,border:'1.5px solid var(--border)',background:'var(--surface)',cursor:'pointer',color:'var(--muted)'}}>Cancel</button>
+              <button onClick={()=>{ localStorage.removeItem('salary_calc_data'); window.location.reload(); }} style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:6,border:'none',background:'var(--danger,#e53e3e)',cursor:'pointer',color:'#fff'}}>Reset</button>
+            </div>
+          ) : (
+            <button onClick={()=>setConfirmReset(true)} title="Reset All Data" style={{width:34,height:34,borderRadius:8,border:'1.5px solid var(--border)',background:'var(--surface2)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--text)',transition:'all .2s'}}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+              </svg>
+            </button>
+          )}
           <button onClick={() => exportToExcel(inputs, result, ccResult, budget)} title="Export to Excel" style={{width:34,height:34,borderRadius:8,border:'1.5px solid var(--border)',background:'var(--surface2)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--text)',transition:'all .2s'}}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
