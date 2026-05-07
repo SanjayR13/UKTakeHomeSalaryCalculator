@@ -423,6 +423,8 @@ function calcAll(inputs, yearData) {
   const niableIncome  = grossAfterSac + totalAllowances;
   const taxableIncome = niableIncome + totalBenefits + otherIncomeAnnual;
 
+  const pensionReliefAmount = pensionEmpMethod === 'relief' ? pensionEmpAnnual : 0;
+
   const { incomeTax, bandBreakdown, effectivePA } = calcIncomeTax(taxableIncome, taxCode, yearData, isScottish, pensionReliefAmount);
   const { incomeTax: itBonus } = calcIncomeTax(taxableIncome + bon, taxCode, yearData, isScottish, pensionReliefAmount);
   const taxOnBonus = itBonus - incomeTax;
@@ -432,7 +434,14 @@ function calcAll(inputs, yearData) {
   const slAmount = slPlans.reduce((s, p) => s + calcStudentLoan(niableIncome, p, yearData), 0);
   const slBonus  = slPlans.reduce((s, p) => s + calcStudentLoan(niableIncome + bon, p, yearData), 0) - slAmount;
 
-  const pensionReliefAmount = pensionEmpMethod === 'relief' ? pensionEmpAnnual : 0;
+  // Payslip-accurate bonus month tax: PAYE uses monthly thresholds (1/12 of annual limits applied per period).
+  // When a bonus lands in one month, payroll annualises that month's total income and divides tax by 12.
+  // This matches what actually appears on the payslip, unlike the annual marginal approach above.
+  const { incomeTax: itBonusPayslip } = calcIncomeTax((taxableIncome / 12 + bon) * 12, taxCode, yearData, isScottish, pensionReliefAmount);
+  const taxOnBonusPayslip = itBonusPayslip / 12 - incomeTax / 12;
+  const niBonusPayslip = calcNI((niableIncome / 12 + bon) * 12, yearData.ni) / 12 - niAmount / 12;
+  const slBonusPayslip = slPlans.reduce((s, p) => s + calcStudentLoan((niableIncome / 12 + bon) * 12, p, yearData) / 12, 0) - slAmount / 12;
+
   const pensionReliefNet = pensionReliefAmount * 0.8;
   const pensionErAnnual = pensionErUseFixed
     ? Math.max(0, Number(pensionErFixed) || 0)
@@ -482,6 +491,7 @@ function calcAll(inputs, yearData) {
     grossAfterSac:r2(grossAfterSac), totalAllowances:r2(totalAllowances), bikPct, evBikValue:r2(evBikValue), p11dBenefits:r2(p11dBenefits), totalBenefits:r2(totalBenefits),
     taxableIncome:r2(taxableIncome), incomeTax:r2(incomeTax), bandBreakdown, effectivePA:r2(effectivePA),
     taxOnBonus:r2(taxOnBonus), niAmount:r2(niAmount), niBonus:r2(niBonus), slAmount:r2(slAmount), slBonus:r2(slBonus), slPlans,
+    taxOnBonusPayslip:r2(taxOnBonusPayslip), niBonusPayslip:r2(niBonusPayslip), slBonusPayslip:r2(slBonusPayslip),
     pensionEmpAnnual:r2(pensionEmpAnnual), pensionEmpMethod, pensionReliefAmount:r2(pensionReliefAmount), pensionReliefNet:r2(pensionReliefNet), pensionErAnnual:r2(pensionErAnnual),
     pensionErNiSaving:r2(pensionErNiSaving), pensionErEffective:r2(pensionErEffective),
     otherIncomeAnnual:r2(otherIncomeAnnual),
@@ -927,7 +937,7 @@ function BreakdownCard({ result, freq, inputs }) {
               <div style={{fontSize:12,fontWeight:600,color:'var(--text)'}}>Adjusted Net Income</div>
               <div style={{fontSize:10,color:'var(--muted)'}}>Used for PA taper & Child Benefit</div>
             </div>
-            <span style={{fontSize:13,fontWeight:700,color:'var(--text)',fontVariantNumeric:'tabular-nums',minWidth:80,textAlign:'right'}}><AnimNum value={pp(ani,freq)}/></span>
+            <span style={{fontSize:13,fontWeight:700,color:'var(--text)',fontVariantNumeric:'tabular-nums',minWidth:80,textAlign:'right'}}><AnimNum value={freq==='monthly' ? (ani-result.bon)/12 : ani}/></span>
           </div>
         );
       })()}
@@ -1097,7 +1107,8 @@ function PayslipCard({ result, inputs }) {
   const nNI = result.niAmount/12;
   const nSL = result.slAmount/12;
   const nPen = result.pensionReliefNet/12;
-  const nNet = result.takeHome/12;
+  const nNet = result.finalTakeHome/12;
+  const hasNetAdj = result.netAdjDeductions > 0 || result.netAdjAdditions > 0;
 
   return (
     <Card>
@@ -1116,6 +1127,12 @@ function PayslipCard({ result, inputs }) {
         <SlipRow label="National Insurance" amount={-nNI} color="var(--red)"/>
         {nSL>0&&<SlipRow label={result.slPlans.length===1?`Student Loan (${result.slPlans[0]})`:'Student Loans'} amount={-nSL} color="var(--muted)"/>}
         {nPen>0&&<SlipRow label="Pension (Relief at Source)" amount={-nPen} color="var(--muted)"/>}
+        {hasNetAdj&&<>
+          <div style={{borderTop:'1px solid var(--border)',marginTop:4}}/>
+          <div style={{fontSize:10,fontWeight:600,color:'var(--muted)',marginBottom:4,marginTop:8,textTransform:'uppercase',letterSpacing:'0.05em'}}>Net Pay Adjustments</div>
+          {(inputs.netDeductions||[]).map(d=>(Number(d.amount)||0)>0&&<SlipRow key={d.id} label={d.label||'Deduction'} amount={-(Number(d.amount)||0)} color="var(--muted)"/>)}
+          {(inputs.netAdditions||[]).map(a=>(Number(a.amount)||0)>0&&<SlipRow key={a.id} label={a.label||'Addition'} amount={Number(a.amount)||0} color="var(--muted)"/>)}
+        </>}
         <SlipRow label="Net Pay" amount={nNet} bold border color="var(--accent)"/>
       </div>}
 
@@ -1126,14 +1143,21 @@ function PayslipCard({ result, inputs }) {
         {ns>0&&<SlipRow label="Salary Sacrifice" amount={-ns} color="var(--muted)" sub="pre-tax deduction"/>}
         <div style={{borderTop:'1px solid var(--border)',marginTop:4}}/>
         <div style={{fontSize:10,fontWeight:600,color:'var(--muted)',marginBottom:4,marginTop:8,textTransform:'uppercase',letterSpacing:'0.05em'}}>Deductions</div>
-        <SlipRow label="PAYE Income Tax" amount={-(nIT+result.taxOnBonus)} color="var(--red)" sub={`incl. ${fmt(result.taxOnBonus)} on bonus`}/>
-        <SlipRow label="National Insurance" amount={-(nNI+result.niBonus)} color="var(--red)" sub={`incl. ${fmt(result.niBonus)} on bonus`}/>
-        {(nSL+result.slBonus)>0&&<SlipRow label={result.slPlans.length===1?`Student Loan (${result.slPlans[0]})`:'Student Loans'} amount={-(nSL+result.slBonus)} color="var(--muted)"/>}
+        <SlipRow label="PAYE Income Tax" amount={-(nIT+result.taxOnBonusPayslip)} color="var(--red)" sub={`incl. ${fmt(result.taxOnBonusPayslip)} on bonus`}/>
+        <SlipRow label="National Insurance" amount={-(nNI+result.niBonusPayslip)} color="var(--red)" sub={`incl. ${fmt(result.niBonusPayslip)} on bonus`}/>
+        {(nSL+result.slBonusPayslip)>0&&<SlipRow label={result.slPlans.length===1?`Student Loan (${result.slPlans[0]})`:'Student Loans'} amount={-(nSL+result.slBonusPayslip)} color="var(--muted)"/>}
         {nPen>0&&<SlipRow label="Pension (Relief at Source)" amount={-nPen} color="var(--muted)"/>}
-        <SlipRow label="Net Pay" amount={nNet+result.bon-result.taxOnBonus-result.niBonus-result.slBonus} bold border color="var(--accent)"/>
+        {hasNetAdj&&<>
+          <div style={{borderTop:'1px solid var(--border)',marginTop:4}}/>
+          <div style={{fontSize:10,fontWeight:600,color:'var(--muted)',marginBottom:4,marginTop:8,textTransform:'uppercase',letterSpacing:'0.05em'}}>Net Pay Adjustments</div>
+          {(inputs.netDeductions||[]).map(d=>(Number(d.amount)||0)>0&&<SlipRow key={d.id} label={d.label||'Deduction'} amount={-(Number(d.amount)||0)} color="var(--muted)"/>)}
+          {(inputs.netAdditions||[]).map(a=>(Number(a.amount)||0)>0&&<SlipRow key={a.id} label={a.label||'Addition'} amount={Number(a.amount)||0} color="var(--muted)"/>)}
+        </>}
+        <SlipRow label="Net Pay" amount={nNet+result.bon-result.taxOnBonusPayslip-result.niBonusPayslip-result.slBonusPayslip} bold border color="var(--accent)"/>
         <div style={{marginTop:8,padding:'8px 10px',background:'var(--green-bg)',borderRadius:8,fontSize:11,color:'var(--green)'}}>
-          {fmt(result.bon)} bonus → {fmt(result.bon-result.taxOnBonus-result.niBonus-result.slBonus)} net ({pct((result.bon-result.taxOnBonus-result.niBonus-result.slBonus)/result.bon)} retained)
+          {fmt(result.bon)} bonus → {fmt(result.bon-result.taxOnBonusPayslip-result.niBonusPayslip-result.slBonusPayslip)} net ({pct((result.bon-result.taxOnBonusPayslip-result.niBonusPayslip-result.slBonusPayslip)/result.bon)} retained)
         </div>
+        <div style={{marginTop:6,fontSize:10,color:'var(--muted)'}}>Payslip figures use monthly PAYE thresholds — cumulative PAYE will adjust in subsequent months.</div>
       </div>}
     </Card>
   );
@@ -2988,7 +3012,7 @@ function App() {
             <div style={{display:'flex',alignItems:'center',gap:6,background:'var(--surface2)',border:'1.5px solid var(--border)',borderRadius:8,padding:'4px 8px'}}>
               <span style={{fontSize:11,fontWeight:600,color:'var(--muted)',whiteSpace:'nowrap'}}>Reset all data?</span>
               <button onClick={()=>setConfirmReset(false)} style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:6,border:'1.5px solid var(--border)',background:'var(--surface)',cursor:'pointer',color:'var(--muted)'}}>Cancel</button>
-              <button onClick={()=>{ localStorage.removeItem('salary_calc_data'); window.location.reload(); }} style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:6,border:'none',background:'var(--danger,#e53e3e)',cursor:'pointer',color:'#fff'}}>Reset</button>
+              <button onClick={()=>{ localStorage.removeItem('salary_calc_data'); localStorage.removeItem('salary_calc_compare_data'); window.location.reload(); }} style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:6,border:'none',background:'var(--danger,#e53e3e)',cursor:'pointer',color:'#fff'}}>Reset</button>
             </div>
           ) : (
             <button onClick={()=>setConfirmReset(true)} title="Reset All Data" style={{width:34,height:34,borderRadius:8,border:'1.5px solid var(--border)',background:'var(--surface2)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--text)',transition:'all .2s'}}>
