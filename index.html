@@ -842,11 +842,34 @@ function DonutChart({ result, freq }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function BreakdownCard({ result, freq, inputs }) {
   const [exp, setExp] = useState({});
+  const [bonusTab, setBonusTab] = useState('normal');
   const toggle = k => setExp(p=>({...p,[k]:!p[k]}));
   const f = v => fmt(pp(v, freq));
   const yd = result.yearData;
   const isScottish = inputs.region === 'scotland';
   const totalPension = result.pensionSacAnnual + result.pensionReliefAmount;
+  const hasBonus = result.bon > 0;
+  const isBonusMonth = freq === 'monthly' && bonusTab === 'bonus';
+  const isBonusAnnual = freq === 'annual' && hasBonus;
+
+  const dGross       = isBonusMonth ? result.sal/12 + result.bon
+                     : isBonusAnnual ? result.sal + result.bon
+                     : pp(result.sal, freq);
+  const dIT          = isBonusMonth ? result.incomeTax/12 + result.taxOnBonusPayslip
+                     : isBonusAnnual ? result.incomeTax + result.taxOnBonus
+                     : pp(result.incomeTax, freq);
+  const dNI          = isBonusMonth ? result.niAmount/12 + result.niBonusPayslip
+                     : isBonusAnnual ? result.niAmount + result.niBonus
+                     : pp(result.niAmount, freq);
+  const dSL          = isBonusMonth ? result.slAmount/12 + result.slBonusPayslip
+                     : isBonusAnnual ? result.slAmount + result.slBonus
+                     : pp(result.slAmount, freq);
+  const dTakeHome    = isBonusMonth ? result.takeHome/12 + result.bon - result.taxOnBonusPayslip - result.niBonusPayslip - result.slBonusPayslip
+                     : isBonusAnnual ? result.takeHomeBonus
+                     : pp(result.takeHome, freq);
+  const dFinalTakeHome = isBonusMonth ? result.takeHome/12 + result.bon - result.taxOnBonusPayslip - result.niBonusPayslip - result.slBonusPayslip + result.netAdjTotal/12
+                       : isBonusAnnual ? result.finalTakeHomeBonus
+                       : pp(result.finalTakeHome, freq);
 
   const Row = ({label, value, sub, color, expandable, ek, muted, indent}) => (
     <div>
@@ -882,10 +905,13 @@ function BreakdownCard({ result, freq, inputs }) {
 
   return (
     <Card>
-      <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)',marginBottom:8}}>Full Breakdown {ppLabel(freq)}</div>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--muted)'}}>Full Breakdown {ppLabel(freq)}</div>
+        {freq==='monthly'&&hasBonus&&<Toggle value={bonusTab} onChange={setBonusTab} small options={[{value:'normal',label:'Regular Month'},{value:'bonus',label:'Bonus Month'}]}/>}
+      </div>
       <div style={{borderBottom:'1.5px solid var(--border)',marginBottom:4}}/>
 
-      <Row label="Gross Salary" value={pp(result.sal,freq)}/>
+      <Row label="Gross Salary" value={dGross} sub={hasBonus&&(isBonusMonth||isBonusAnnual)?`incl. bonus (${fmt(result.bon)})`:undefined}/>
 
       {result.totalAllowances>0&&<>
         <Row label="Allowances & Additional Pay" value={pp(result.totalAllowances,freq)} color="var(--muted)" expandable ek="alw"/>
@@ -937,12 +963,12 @@ function BreakdownCard({ result, freq, inputs }) {
               <div style={{fontSize:12,fontWeight:600,color:'var(--text)'}}>Adjusted Net Income</div>
               <div style={{fontSize:10,color:'var(--muted)'}}>Used for PA taper & Child Benefit</div>
             </div>
-            <span style={{fontSize:13,fontWeight:700,color:'var(--text)',fontVariantNumeric:'tabular-nums',minWidth:80,textAlign:'right'}}><AnimNum value={freq==='monthly' ? (ani-result.bon)/12 : ani}/></span>
+            <span style={{fontSize:13,fontWeight:700,color:'var(--text)',fontVariantNumeric:'tabular-nums',minWidth:80,textAlign:'right'}}><AnimNum value={freq==='monthly' ? (isBonusMonth ? (ani-result.bon)/12 + result.bon : (ani-result.bon)/12) : ani}/></span>
           </div>
         );
       })()}
 
-      <Row label="Income Tax" value={-pp(result.incomeTax,freq)} color="var(--red)" expandable ek="it"
+      <Row label="Income Tax" value={-dIT} color="var(--red)" expandable ek="it"
         sub={result.effectivePA < yd.pa ? `Reduced PA: ${fmt(result.effectivePA)}` : undefined}/>
       {exp.it&&<Detail>
         <strong>Income Tax</strong> · {inputs.taxYear} · {isScottish?'Scottish rates':'England/Wales/NI rates'}<br/>
@@ -962,7 +988,7 @@ function BreakdownCard({ result, freq, inputs }) {
         <Row key={i} label={b.name} value={-pp(b.amount,freq)} sub={`${(b.rate*100).toFixed(0)}% on ${fmt(b.taxable)}`} color="var(--red)" muted indent/>
       ))}
 
-      <Row label="National Insurance" value={-pp(result.niAmount,freq)} color="var(--red)" expandable ek="ni"/>
+      <Row label="National Insurance" value={-dNI} color="var(--red)" expandable ek="ni"/>
       {exp.ni&&<Detail>
         <strong>Employee NI</strong> is calculated on your earnings after salary sacrifice (not on P11D benefits).<br/>
         <div style={{marginTop:4}}>
@@ -975,7 +1001,7 @@ function BreakdownCard({ result, freq, inputs }) {
       </Detail>}
 
       {result.slAmount>0&&<>
-        <Row label={result.slPlans.length===1?`Student Loan (${result.slPlans[0]})`:'Student Loans'} value={-pp(result.slAmount,freq)} color="var(--muted)" expandable ek="sl"/>
+        <Row label={result.slPlans.length===1?`Student Loan (${result.slPlans[0]})`:'Student Loans'} value={-dSL} color="var(--muted)" expandable ek="sl"/>
         {exp.sl&&<Detail>
           {result.slPlans.map(plan=>{
             const pd=yd.studentLoan[plan];
@@ -1020,11 +1046,11 @@ function BreakdownCard({ result, freq, inputs }) {
 
       <div style={{borderTop:'2px solid var(--border)',paddingTop:12,marginTop:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
         <span style={{fontSize:14,fontWeight:700}}>Take-Home Pay</span>
-        <span style={{fontSize:16,fontWeight:700,color:'var(--accent)',fontVariantNumeric:'tabular-nums'}}><AnimNum value={pp(result.takeHome,freq)}/></span>
+        <span style={{fontSize:16,fontWeight:700,color:'var(--accent)',fontVariantNumeric:'tabular-nums'}}><AnimNum value={dTakeHome}/></span>
       </div>
-      {result.bon>0&&<div style={{marginTop:6,paddingTop:8,borderTop:'1px dashed var(--border)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-        <span style={{fontSize:12,color:'var(--muted)'}}>With bonus ({fmt(result.bon)})</span>
-        <span style={{fontSize:13,fontWeight:600,color:'var(--green)',fontVariantNumeric:'tabular-nums'}}><AnimNum value={pp(result.takeHomeBonus,freq)}/></span>
+      {isBonusAnnual&&<div style={{marginTop:6,paddingTop:8,borderTop:'1px dashed var(--border)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <span style={{fontSize:12,color:'var(--muted)'}}>Excl. bonus ({fmt(result.bon)})</span>
+        <span style={{fontSize:13,fontWeight:600,color:'var(--muted)',fontVariantNumeric:'tabular-nums'}}><AnimNum value={result.takeHome}/></span>
       </div>}
 
       {(result.netAdjDeductions>0||result.netAdjAdditions>0)&&<>
@@ -1045,11 +1071,11 @@ function BreakdownCard({ result, freq, inputs }) {
         </div>
         <div style={{borderTop:'2px solid var(--accent)',paddingTop:10,marginTop:6,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
           <span style={{fontSize:14,fontWeight:700}}>Net Take-Home</span>
-          <span style={{fontSize:16,fontWeight:700,color:'var(--accent)',fontVariantNumeric:'tabular-nums'}}><AnimNum value={pp(result.finalTakeHome,freq)}/></span>
+          <span style={{fontSize:16,fontWeight:700,color:'var(--accent)',fontVariantNumeric:'tabular-nums'}}><AnimNum value={dFinalTakeHome}/></span>
         </div>
-        {result.bon>0&&<div style={{marginTop:6,paddingTop:8,borderTop:'1px dashed var(--border)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-          <span style={{fontSize:12,color:'var(--muted)'}}>Net with bonus ({fmt(result.bon)})</span>
-          <span style={{fontSize:13,fontWeight:600,color:'var(--green)',fontVariantNumeric:'tabular-nums'}}><AnimNum value={pp(result.finalTakeHomeBonus,freq)}/></span>
+        {isBonusAnnual&&<div style={{marginTop:6,paddingTop:8,borderTop:'1px dashed var(--border)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <span style={{fontSize:12,color:'var(--muted)'}}>Excl. bonus ({fmt(result.bon)})</span>
+          <span style={{fontSize:13,fontWeight:600,color:'var(--muted)',fontVariantNumeric:'tabular-nums'}}><AnimNum value={result.finalTakeHome}/></span>
         </div>}
       </>}
 
@@ -2331,7 +2357,6 @@ function ResultsPanel({ result, inputs }) {
         <DonutChart result={result} freq={inputs.freq}/>
       </Card>
       <BreakdownCard result={result} freq={inputs.freq} inputs={inputs}/>
-      {inputs.freq==='monthly'&&<PayslipCard result={result} inputs={inputs}/>}
     </div>
   );
 }
